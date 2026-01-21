@@ -102,7 +102,6 @@ export function renderMainPage(): HTMLElement {
 
   wrapper.innerHTML = `
     <div class="mx-auto flex w-full max-w-[558px] flex-col gap-2 px-4 pt-16 pb-6">
-      <!-- CARD 1: TOTAL -->
       <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2">
@@ -134,7 +133,6 @@ export function renderMainPage(): HTMLElement {
         </div>
       </section>
 
-      <!-- CARD 2: TODAY + INPUT -->
       <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
         <div class="flex flex-col gap-3">
           <div class="flex flex-col gap-0.5">
@@ -185,7 +183,6 @@ export function renderMainPage(): HTMLElement {
         </div>
       </section>
 
-      <!-- CARD 3: HISTORY -->
       <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
         <div class="flex flex-col gap-6">
           <div class="flex flex-col gap-1">

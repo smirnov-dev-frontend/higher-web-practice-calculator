@@ -85,11 +85,9 @@ export function renderStartPage(): HTMLElement {
 
     wrapper.innerHTML = `
       <div class="min-h-screen bg-slate-50">
-        <!-- ✅ Точно как на main-page по ширине -->
         <div class="mx-auto flex w-full max-w-[558px] flex-col gap-2 px-4 pt-16 pb-6">
           <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
             <div class="flex flex-col gap-6">
-              <!-- Заголовочная зона как в макете -->
               <div class="flex flex-col gap-3">
                 <div class="flex items-baseline gap-2">
                   <div class="flex-1 text-[24px] font-semibold leading-[1.2] text-slate-500 font-inter">
@@ -112,7 +110,6 @@ export function renderStartPage(): HTMLElement {
               </div>
 
               <form id="editBudgetForm" class="flex w-full flex-col gap-4">
-                <!-- Пополнить -->
                 <div class="flex flex-col gap-1">
                   <div class="ml-3 font-inter font-normal text-slate-500" style="font-size: 12px; line-height: 140%;">
                     Пополнить
@@ -127,8 +124,7 @@ export function renderStartPage(): HTMLElement {
                     class="h-12 w-full rounded-lg border-2 border-blue-500 bg-white px-3 text-[16px] font-normal leading-[1.5] text-slate-900 outline-none font-inter"
                   />
                 </div>
-
-                <!-- На срок -->
+                
                 <div class="flex flex-col gap-1">
                   <div class="ml-3 font-inter font-normal text-slate-500" style="font-size: 12px; line-height: 140%;">
                     На срок

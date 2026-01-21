@@ -87,7 +87,7 @@ export function renderHistoryPage(): HTMLElement {
                             aria-label="Удалить"
                             data-del-id="${String(t.id)}"
                           >
-                            ${renderXIcon()}
+                            ${renderDeleteIcon()}
                           </button>
                         </div>
                         ${divider}
@@ -140,11 +140,14 @@ export function renderHistoryPage(): HTMLElement {
   return wrapper;
 }
 
-function renderXIcon(): string {
+function renderDeleteIcon(): string {
   return `
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M2 2L10 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      <path d="M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
+    <img
+      src="/assets/delete.svg"
+      alt=""
+      class="h-3 w-3"
+      aria-hidden="true"
+      draggable="false"
+    />
   `;
 }

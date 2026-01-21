@@ -119,6 +119,19 @@ function monthHasSelectableDates(monthStart: Date, today: Date): boolean {
   return false;
 }
 
+function enterIconHtml(extraClass: string = ''): string {
+  const cls = ['h-2 w-4 select-none', extraClass].filter(Boolean).join(' ');
+  return `
+    <img
+      src="/assets/enter.svg"
+      alt=""
+      aria-hidden="true"
+      draggable="false"
+      class="${cls}"
+    />
+  `;
+}
+
 export function PeriodSelect(props: PeriodSelectProps): string {
   const id = escapeHtml(props.id);
 
@@ -155,9 +168,7 @@ export function PeriodSelect(props: PeriodSelectProps): string {
       >
         <span id="${id}__text">Выберите срок</span>
         <span class="ml-3 text-slate-500">
-          <svg width="16" height="8" viewBox="0 0 16 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1 1L8 7L15 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          ${enterIconHtml('')}
         </span>
       </button>
 
@@ -165,64 +176,56 @@ export function PeriodSelect(props: PeriodSelectProps): string {
         id="${id}__panel"
         class="absolute left-0 z-20 mt-2 hidden w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg"
       >
-        <!-- LIST MODE -->
         <div id="${id}__modeList" class="p-3">
           <ul class="space-y-0" role="listbox" id="${id}__list">
             ${presetsHtml}
           </ul>
         </div>
 
-        <!-- CALENDAR MODE -->
-<div id="${id}__modeCalendar" class="hidden">
-  <div class="relative flex w-full flex-col items-start gap-2 bg-white p-[12px_12px_8px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-t-xl">
-    <!-- Стрелки НЕ должны занимать место в раскладке -->
-    <button
-      type="button"
-      id="${id}__prev"
-      class="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-md text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent"
-      aria-label="Предыдущий месяц"
-    >
-      <svg width="16" height="8" viewBox="0 0 16 8" fill="none" xmlns="http://www.w3.org/2000/svg" class="rotate-90">
-        <path d="M1 1L8 7L15 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
+        <div id="${id}__modeCalendar" class="hidden">
+          <div class="relative flex w-full flex-col items-start gap-2 bg-white p-[12px_12px_8px] shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-t-xl">
+            <button
+              type="button"
+              id="${id}__prev"
+              class="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-md text-slate-500 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent"
+              aria-label="Предыдущий месяц"
+            >
+              ${enterIconHtml('rotate-90')}
+            </button>
 
-    <button
-      type="button"
-      id="${id}__next"
-      class="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-md text-slate-900 hover:bg-slate-50"
-      aria-label="Следующий месяц"
-    >
-      <svg width="16" height="8" viewBox="0 0 16 8" fill="none" xmlns="http://www.w3.org/2000/svg" class="-rotate-90">
-        <path d="M1 1L8 7L15 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
+            <button
+              type="button"
+              id="${id}__next"
+              class="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-md text-slate-900 hover:bg-slate-50"
+              aria-label="Следующий месяц"
+            >
+              ${enterIconHtml('-rotate-90')}
+            </button>
 
-    <!-- Контент календаря. Делаем внутренние отступы, чтобы стрелки не наезжали -->
-    <div class="flex w-full min-w-0 flex-col items-start gap-1 px-10">
-      <div class="flex h-[23px] w-full items-center justify-between px-2">
-        <div id="${id}__month" class="text-[18px] font-semibold leading-[1.3] text-slate-900"></div>
-        <div id="${id}__year" class="text-[18px] font-semibold leading-[1.3] text-slate-900"></div>
-      </div>
+            <div class="flex w-full min-w-0 flex-col items-start gap-1 px-10">
+              <div class="flex h-[23px] w-full items-center justify-between px-2">
+                <div id="${id}__month" class="text-[18px] font-semibold leading-[1.3] text-slate-900"></div>
+                <div id="${id}__year" class="text-[18px] font-semibold leading-[1.3] text-slate-900"></div>
+              </div>
 
-      <div class="flex w-full flex-col items-start p-2">
-        <div class="grid w-full grid-cols-7 gap-[2px]">
-          <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">пн</div>
-          <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">вт</div>
-          <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">ср</div>
-          <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">чт</div>
-          <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">пт</div>
-          <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">сб</div>
-          <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">вс</div>
+              <div class="flex w-full flex-col items-start p-2">
+                <div class="grid w-full grid-cols-7 gap-[2px]">
+                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">пн</div>
+                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">вт</div>
+                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">ср</div>
+                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">чт</div>
+                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">пт</div>
+                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">сб</div>
+                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">вс</div>
+                </div>
+
+                <div id="${id}__grid" class="mt-[2px] grid w-full grid-cols-7 gap-[2px]"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-200"></div>
         </div>
-
-        <div id="${id}__grid" class="mt-[2px] grid w-full grid-cols-7 gap-[2px]"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="border-t border-slate-200"></div>
-</div>
       </div>
     </div>
   `;
@@ -302,7 +305,6 @@ export function initPeriodSelect(root: HTMLElement, props: PeriodSelectProps): v
     if (v) {
       modeList.classList.remove('hidden');
       modeCalendar.classList.add('hidden');
-
       updateTextFromValue();
     } else {
       updateTextFromValue();
@@ -349,13 +351,9 @@ export function initPeriodSelect(root: HTMLElement, props: PeriodSelectProps): v
 
       const cls = [
         base,
-
         !inMonth ? 'pointer-events-none bg-white text-[#F9FAFB]' : '',
-
         inMonth && disabled ? 'pointer-events-none bg-white text-[#F9FAFB]' : '',
-
         inMonth && !disabled && selected ? 'bg-blue-500 text-white hover:bg-blue-500/85' : '',
-
         inMonth && !disabled && !selected ? 'bg-[#F9FAFB] text-slate-900 hover:bg-slate-100' : '',
       ]
         .filter(Boolean)
