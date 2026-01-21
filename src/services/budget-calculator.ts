@@ -5,7 +5,7 @@ import type { Budget, Transaction } from '../models/schemas';
 export function periodDays(budget: Budget): number {
   const s = parseISO(budget.startDate);
   const e = parseISO(budget.endDate);
-  return Math.max(0, differenceInCalendarDays(e, s) + 1);
+  return Math.max(0, differenceInCalendarDays(e, s));
 }
 
 export function remainingDays(budget: Budget, todayISO: string): number {
