@@ -2,7 +2,7 @@ import { format, parseISO, differenceInCalendarDays, startOfDay } from 'date-fns
 import { ru } from 'date-fns/locale';
 
 import {
-  plannedDailyBudget,
+  averageRemainingPerDay,
   remainingDays,
   todayLeft,
   totalBalance,
@@ -84,7 +84,7 @@ export function renderMainPage(): HTMLElement {
   };
 
   const total = totalBalance(safeBudget, txs);
-  const daily = plannedDailyBudget(safeBudget);
+  const daily = averageRemainingPerDay(safeBudget, txs, todayISO);
   const leftToday = todayLeft(safeBudget, txs, todayISO);
   const daysLeft = remainingDays(safeBudget, todayISO);
 

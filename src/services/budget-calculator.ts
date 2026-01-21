@@ -36,7 +36,15 @@ export function todayNet(txs: Transaction[], todayISO: string): number {
 }
 
 export function todayLeft(budget: Budget, txs: Transaction[], todayISO: string): number {
-  return round2(plannedDailyBudget(budget) + todayNet(txs, todayISO));
+  const daysLeft = remainingDays(budget, todayISO);
+  if (daysLeft <= 0) {
+    return 0;
+  }
+
+  const balance = totalBalance(budget, txs);
+  const todayTransactions = todayNet(txs, todayISO);
+
+  return round2(balance / daysLeft + todayTransactions);
 }
 
 export function averageRemainingPerDay(

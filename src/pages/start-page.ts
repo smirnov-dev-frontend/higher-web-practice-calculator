@@ -84,67 +84,66 @@ export function renderStartPage(): HTMLElement {
 
     wrapper.innerHTML = `
       <div class="min-h-screen bg-slate-50 px-4 pt-16 pb-6 flex flex-col items-center min-[704px]:pt-0 min-[704px]:pb-0 min-[704px]:justify-center min-[1140px]:pt-16 min-[1140px]:pb-6 min-[1140px]:justify-start">
-         <div class="w-full flex flex-col gap-2 min-[704px]:w-[524px] min-[1140px]:w-[558px]">
-            <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
-              <div class="flex flex-col gap-6">
-                <div class="flex flex-col gap-3">
-                  <div class="flex items-baseline gap-2">
-                    <div class="flex-1 font-inter text-[24px] font-semibold leading-[1.2] text-slate-500">
-                      Общий баланс
-                    </div>
-
-                    <div class="font-inter text-[16px] font-normal leading-[1.5] text-blue-500">
-                      ${formatMoney(daily)} в день
-                    </div>
+        <div class="w-full flex flex-col gap-2 min-[704px]:w-[524px] min-[1140px]:w-[558px]">
+          <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
+            <div class="flex flex-col gap-6">
+              <div class="flex flex-col gap-3">
+                <div class="flex items-baseline gap-2">
+                  <div class="flex-1 font-inter text-[24px] font-semibold leading-[1.2] text-slate-500">
+                    Общий баланс
                   </div>
 
-                  <div class="flex items-baseline gap-2">
-                    <div class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
-                      ${formatMoney(total)}
-                    </div>
-
-                    <div class="font-inter text-[16px] font-normal leading-[1.5] text-slate-500">
-                      на ${daysLeft} ${pluralDaysRu(daysLeft)}
-                    </div>
+                  <div class="font-inter text-[16px] font-normal leading-[1.5] text-blue-500">
+                    ${formatMoney(daily)} в день
                   </div>
                 </div>
 
-                <form id="editBudgetForm" class="flex w-full flex-col gap-4">
-                  <div class="flex flex-col gap-1">
-                    <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-                      Пополнить
-                    </div>
-
-                    <input
-                      id="topUp"
-                      name="topUp"
-                      type="text"
-                      inputmode="numeric"
-                      placeholder="+0 ₽"
-                      class="h-12 w-full rounded-lg border-2 border-blue-500 bg-white px-3 font-inter text-[16px] font-normal leading-[1.5] text-slate-900 outline-none"
-                    />
+                <div class="flex items-baseline gap-2">
+                  <div class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
+                    ${formatMoney(total)}
                   </div>
 
-                  <div class="flex flex-col gap-1">
-                    <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-                      На срок
-                    </div>
-                    ${PeriodSelect({ id: 'endDate', minDateISO: today })}
+                  <div class="font-inter text-[16px] font-normal leading-[1.5] text-slate-500">
+                    на ${daysLeft} ${pluralDaysRu(daysLeft)}
                   </div>
-
-                  <p id="editFormError" class="hidden text-sm text-red-600"></p>
-
-                  <button
-                    type="submit"
-                    id="saveEditBtn"
-                    class="h-12 w-full rounded-[4px] bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
-                  >
-                    Сохранить
-                  </button>
-                </form>
+                </div>
               </div>
-            </section>
-          </div>
+
+              <form id="editBudgetForm" class="flex w-full flex-col gap-4">
+                <div class="flex flex-col gap-1">
+                  <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+                    Пополнить
+                  </div>
+
+                  <input
+                    id="topUp"
+                    name="topUp"
+                    type="text"
+                    inputmode="numeric"
+                    placeholder="+0 ₽"
+                    class="h-12 w-full rounded-lg border-2 border-blue-500 bg-white px-3 font-inter text-[16px] font-normal leading-[1.5] text-slate-900 outline-none"
+                  />
+                </div>
+
+                <div class="flex flex-col gap-1">
+                  <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+                    На срок
+                  </div>
+                  ${PeriodSelect({ id: 'endDate', minDateISO: today })}
+                </div>
+
+                <p id="editFormError" class="hidden text-sm text-red-600"></p>
+
+                <button
+                  type="submit"
+                  id="saveEditBtn"
+                  class="h-12 w-full rounded-[4px] bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
+                >
+                  Сохранить
+                </button>
+              </form>
+            </div>
+          </section>
         </div>
       </div>
     `;
@@ -177,44 +176,84 @@ export function renderStartPage(): HTMLElement {
   }
 
   wrapper.innerHTML = `
-    <div class="min-h-screen bg-slate-50">
-      <div class="mx-auto flex min-h-screen w-full flex-col items-center justify-center px-4 pb-16">
-        <div class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-md min-[704px]:w-[524px] min-[1140px]:w-[558px]">
-          <h1 class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
-            Начнём!
-          </h1>
+    <div class="min-[704px]:hidden min-h-screen bg-white px-4 py-8">
+      <div class="pb-28">
+        <h1 class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
+          Начнём!
+        </h1>
 
-          <form id="budgetForm" class="mt-6 flex w-full flex-col gap-4">
-            <div class="flex flex-col gap-1">
-              <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-                Укажите баланс
-              </div>
-              ${InputField({
-                id: 'initialBalance',
-                type: 'text',
-                inputmode: 'numeric',
-                placeholder: 'Стартовый баланс',
-              })}
+        <form id="budgetFormMobile" class="mt-6 flex w-full flex-col gap-4">
+          <div class="flex flex-col gap-1">
+            <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+              Укажите баланс
             </div>
+            ${InputField({
+              id: 'initialBalanceMobile',
+              type: 'text',
+              inputmode: 'numeric',
+              placeholder: 'Стартовый баланс',
+            })}
+          </div>
 
-            <div class="flex flex-col gap-1">
-              <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-                На срок
-              </div>
-              ${PeriodSelect({ id: 'endDate', minDateISO: today })}
+          <div class="flex flex-col gap-1">
+            <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+              На срок
             </div>
+            ${PeriodSelect({ id: 'endDateMobile', minDateISO: today })}
+          </div>
 
-            <p id="formError" class="hidden text-sm text-red-600"></p>
+          <p id="formErrorMobile" class="hidden text-sm text-red-600"></p>
+        </form>
+      </div>
 
-            <button
-              type="submit"
-              id="calculateBtn"
-              class="h-12 w-full rounded bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
-            >
-              Рассчитать
-            </button>
-          </form>
-        </div>
+      <div class="fixed inset-x-0 bottom-0 bg-slate-50 px-4 pb-8 pt-4">
+        <button
+          type="submit"
+          form="budgetFormMobile"
+          id="calculateBtnMobile"
+          class="hidden h-12 w-full rounded bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
+        >
+          Рассчитать
+        </button>
+      </div>
+    </div>
+
+    <div class="hidden min-[704px]:flex min-h-screen w-full flex-col items-center justify-center bg-slate-50 px-4 pb-16">
+      <div class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-md min-[704px]:w-[524px] min-[1140px]:w-[558px]">
+        <h1 class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
+          Начнём!
+        </h1>
+
+        <form id="budgetForm" class="mt-6 flex w-full flex-col gap-4">
+          <div class="flex flex-col gap-1">
+            <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+              Укажите баланс
+            </div>
+            ${InputField({
+              id: 'initialBalance',
+              type: 'text',
+              inputmode: 'numeric',
+              placeholder: 'Стартовый баланс',
+            })}
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+              На срок
+            </div>
+            ${PeriodSelect({ id: 'endDate', minDateISO: today })}
+          </div>
+
+          <p id="formError" class="hidden text-sm text-red-600"></p>
+
+          <button
+            type="submit"
+            id="calculateBtn"
+            class="h-12 w-full rounded bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
+          >
+            Рассчитать
+          </button>
+        </form>
       </div>
     </div>
   `;
@@ -222,21 +261,64 @@ export function renderStartPage(): HTMLElement {
   const form = wrapper.querySelector<HTMLFormElement>('#budgetForm');
   const errorEl = wrapper.querySelector<HTMLParagraphElement>('#formError');
 
-  if (!form || !errorEl) {
-    return wrapper;
+  if (form && errorEl) {
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      void handleCreateSubmit(wrapper, errorEl);
+    });
+
+    const balanceInput = wrapper.querySelector<HTMLInputElement>('#initialBalance');
+    if (balanceInput) {
+      attachMoneyInput(balanceInput, { emptyPlaceholder: 'Стартовый баланс' });
+    }
+
+    initPeriodSelect(wrapper, { id: 'endDate', minDateISO: today });
   }
 
-  form.addEventListener('submit', e => {
-    e.preventDefault();
-    void handleCreateSubmit(wrapper, errorEl);
-  });
+  const formMobile = wrapper.querySelector<HTMLFormElement>('#budgetFormMobile');
+  const errorElMobile = wrapper.querySelector<HTMLParagraphElement>('#formErrorMobile');
+  const btnMobile = wrapper.querySelector<HTMLButtonElement>('#calculateBtnMobile');
+  const balanceInputMobile = wrapper.querySelector<HTMLInputElement>('#initialBalanceMobile');
+  const endHiddenMobile = wrapper.querySelector<HTMLInputElement>('#endDateMobile');
 
-  const balanceInput = wrapper.querySelector<HTMLInputElement>('#initialBalance');
-  if (balanceInput) {
-    attachMoneyInput(balanceInput, { emptyPlaceholder: 'Стартовый баланс' });
+  if (formMobile && errorElMobile) {
+    formMobile.addEventListener('submit', e => {
+      e.preventDefault();
+      void handleCreateSubmitMobile(wrapper, errorElMobile);
+    });
   }
 
-  initPeriodSelect(wrapper, { id: 'endDate', minDateISO: today });
+  if (balanceInputMobile) {
+    attachMoneyInput(balanceInputMobile, { emptyPlaceholder: 'Стартовый баланс' });
+  }
+
+  initPeriodSelect(wrapper, { id: 'endDateMobile', minDateISO: today });
+
+  if (btnMobile && balanceInputMobile && endHiddenMobile) {
+    const isValid = () => {
+      const digits = balanceInputMobile.value.replace(/[^\d]/g, '');
+      const amount = digits ? Number(digits) : 0;
+      const hasDate = Boolean(endHiddenMobile.value && endHiddenMobile.value.trim().length > 0);
+      return amount > 0 && hasDate;
+    };
+
+    const syncButton = () => {
+      btnMobile.classList.toggle('hidden', !isValid());
+    };
+
+    balanceInputMobile.addEventListener('input', syncButton);
+    balanceInputMobile.addEventListener('blur', syncButton);
+
+    let lastDate = endHiddenMobile.value;
+    window.setInterval(() => {
+      if (endHiddenMobile.value !== lastDate) {
+        lastDate = endHiddenMobile.value;
+        syncButton();
+      }
+    }, 100);
+
+    syncButton();
+  }
 
   return wrapper;
 }
@@ -253,6 +335,36 @@ async function handleCreateSubmit(
   ).trim();
   const startDate = formatISODate(new Date());
   const endDate = (wrapper.querySelector<HTMLInputElement>('#endDate')?.value ?? '').trim();
+
+  const parsed = parseBudgetForm({ initialBalance, startDate, endDate });
+
+  if (!parsed.ok) {
+    errorEl.textContent = parsed.error;
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
+  await saveBudget(parsed.value);
+
+  appStore.setState({
+    budget: parsed.value,
+    route: 'main',
+    error: null,
+  });
+}
+
+async function handleCreateSubmitMobile(
+  wrapper: HTMLElement,
+  errorEl: HTMLParagraphElement
+): Promise<void> {
+  errorEl.classList.add('hidden');
+  errorEl.textContent = '';
+
+  const initialBalance = (
+    wrapper.querySelector<HTMLInputElement>('#initialBalanceMobile')?.value ?? ''
+  ).trim();
+  const startDate = formatISODate(new Date());
+  const endDate = (wrapper.querySelector<HTMLInputElement>('#endDateMobile')?.value ?? '').trim();
 
   const parsed = parseBudgetForm({ initialBalance, startDate, endDate });
 
