@@ -83,7 +83,84 @@ export function renderStartPage(): HTMLElement {
     const daysLeft = remainingDays(budget, today);
 
     wrapper.innerHTML = `
-      <div class="min-h-screen bg-slate-50 px-4 pt-16 pb-6 flex flex-col items-center min-[704px]:pt-0 min-[704px]:pb-0 min-[704px]:justify-center min-[1140px]:pt-16 min-[1140px]:pb-6 min-[1140px]:justify-start">
+      <div class="min-[704px]:hidden min-h-screen bg-white px-4 py-8">
+        <div class="pb-28">
+          <div class="flex items-baseline justify-between gap-3">
+            <div class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
+              Общий баланс
+            </div>
+            <div class="font-inter text-[18px] font-normal leading-[1.3] text-blue-500">
+              ${formatMoney(daily)} в день
+            </div>
+          </div>
+
+          <form id="editBudgetFormMobile" class="mt-6 flex w-full flex-col gap-4">
+            <div class="flex flex-col gap-1">
+              <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+                Ваш баланс
+              </div>
+              ${InputField({
+                id: 'currentBalanceMobile',
+                type: 'text',
+                inputmode: 'numeric',
+                placeholder: '0 ₽',
+              })}
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+                Пополнить
+              </div>
+              <input
+                id="topUpMobile"
+                name="topUpMobile"
+                type="text"
+                inputmode="numeric"
+                placeholder="+0 ₽"
+                class="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 font-inter text-[16px] font-normal leading-[1.5] text-slate-900 outline-none focus:border-2 focus:border-blue-500"
+              />
+            </div>
+
+            <div class="flex flex-col gap-1">
+              <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+                На срок
+              </div>
+              ${PeriodSelect({ id: 'endDateMobileEdit', minDateISO: today })}
+            </div>
+
+            <p id="editFormErrorMobile" class="hidden text-sm text-red-600"></p>
+          </form>
+        </div>
+
+        <div class="fixed inset-x-0 bottom-0 bg-white px-4 pb-8 pt-4">
+          <button
+            type="button"
+            id="backBtnMobile"
+            class="h-12 w-full rounded border border-blue-500 bg-white px-4 font-inter text-[16px] font-medium leading-[1.5] text-blue-500 transition-colors duration-150 hover:bg-blue-500/10"
+          >
+            Вернуться
+          </button>
+
+          <button
+            type="button"
+            id="cancelBtnMobile"
+            class="hidden mt-3 h-12 w-full rounded border border-blue-500 bg-white px-4 font-inter text-[16px] font-medium leading-[1.5] text-blue-500 transition-colors duration-150 hover:bg-blue-500/10"
+          >
+            Вернуться без сохранения
+          </button>
+
+          <button
+            type="submit"
+            form="editBudgetFormMobile"
+            id="saveBtnMobile"
+            class="hidden mt-3 h-12 w-full rounded bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
+          >
+            Сохранить
+          </button>
+        </div>
+      </div>
+
+      <div class="hidden min-[704px]:flex min-h-screen bg-slate-50 px-4 pt-16 pb-6 flex-col items-center min-[704px]:pt-0 min-[704px]:pb-0 min-[704px]:justify-center min-[1140px]:pt-16 min-[1140px]:pb-6 min-[1140px]:justify-start">
         <div class="w-full flex flex-col gap-2 min-[704px]:w-[524px] min-[1140px]:w-[558px]">
           <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
             <div class="flex flex-col gap-6">
@@ -152,7 +229,6 @@ export function renderStartPage(): HTMLElement {
     if (endHidden) {
       endHidden.value = budget.endDate;
     }
-
     initPeriodSelect(wrapper, { id: 'endDate', minDateISO: today });
 
     const topUpInput = wrapper.querySelector<HTMLInputElement>('#topUp');
@@ -162,15 +238,97 @@ export function renderStartPage(): HTMLElement {
 
     const form = wrapper.querySelector<HTMLFormElement>('#editBudgetForm');
     const errorEl = wrapper.querySelector<HTMLParagraphElement>('#editFormError');
-
-    if (!form || !errorEl) {
-      return wrapper;
+    if (form && errorEl) {
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        void handleEditSubmit(wrapper, errorEl);
+      });
     }
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      void handleEditSubmit(wrapper, errorEl);
-    });
+    const endHiddenMobileEdit = wrapper.querySelector<HTMLInputElement>('#endDateMobileEdit');
+    if (endHiddenMobileEdit) {
+      endHiddenMobileEdit.value = budget.endDate;
+    }
+    initPeriodSelect(wrapper, { id: 'endDateMobileEdit', minDateISO: today });
+
+    const currentBalanceMobile = wrapper.querySelector<HTMLInputElement>('#currentBalanceMobile');
+    if (currentBalanceMobile) {
+      currentBalanceMobile.value = formatRubles(Math.max(0, total));
+      attachMoneyInput(currentBalanceMobile, { emptyPlaceholder: '0 ₽' });
+    }
+
+    const topUpMobile = wrapper.querySelector<HTMLInputElement>('#topUpMobile');
+    if (topUpMobile) {
+      attachPlusMoneyInput(topUpMobile);
+    }
+
+    const formMobileEdit = wrapper.querySelector<HTMLFormElement>('#editBudgetFormMobile');
+    const errMobileEdit = wrapper.querySelector<HTMLParagraphElement>('#editFormErrorMobile');
+    if (formMobileEdit && errMobileEdit) {
+      formMobileEdit.addEventListener('submit', e => {
+        e.preventDefault();
+        void handleEditSubmitMobile(wrapper, errMobileEdit);
+      });
+    }
+
+    const backBtnMobile = wrapper.querySelector<HTMLButtonElement>('#backBtnMobile');
+    const cancelBtnMobile = wrapper.querySelector<HTMLButtonElement>('#cancelBtnMobile');
+    const saveBtnMobile = wrapper.querySelector<HTMLButtonElement>('#saveBtnMobile');
+
+    const balanceEl = wrapper.querySelector<HTMLInputElement>('#currentBalanceMobile');
+    const topUpEl = wrapper.querySelector<HTMLInputElement>('#topUpMobile');
+    const endDateEl = wrapper.querySelector<HTMLInputElement>('#endDateMobileEdit');
+
+    const goBackNoSave = () => {
+      appStore.setState({ route: 'main' });
+    };
+
+    backBtnMobile?.addEventListener('click', goBackNoSave);
+    cancelBtnMobile?.addEventListener('click', goBackNoSave);
+
+    if (backBtnMobile && cancelBtnMobile && saveBtnMobile && balanceEl && topUpEl && endDateEl) {
+      const initial = {
+        balance: parseRublesLocal(balanceEl.value),
+        topUp: parseRublesLocal(topUpEl.value),
+        endDate: (endDateEl.value ?? '').trim(),
+      };
+
+      const hasChanges = () => {
+        const now = {
+          balance: parseRublesLocal(balanceEl.value),
+          topUp: parseRublesLocal(topUpEl.value),
+          endDate: (endDateEl.value ?? '').trim(),
+        };
+
+        return (
+          now.balance !== initial.balance ||
+          now.topUp !== initial.topUp ||
+          now.endDate !== initial.endDate
+        );
+      };
+
+      const syncButtons = () => {
+        const changed = hasChanges();
+
+        backBtnMobile.classList.toggle('hidden', changed);
+
+        cancelBtnMobile.classList.toggle('hidden', !changed);
+        saveBtnMobile.classList.toggle('hidden', !changed);
+      };
+
+      balanceEl.addEventListener('input', syncButtons);
+      topUpEl.addEventListener('input', syncButtons);
+
+      let lastDate = endDateEl.value;
+      window.setInterval(() => {
+        if (endDateEl.value !== lastDate) {
+          lastDate = endDateEl.value;
+          syncButtons();
+        }
+      }, 100);
+
+      syncButtons();
+    }
 
     return wrapper;
   }
@@ -206,7 +364,7 @@ export function renderStartPage(): HTMLElement {
         </form>
       </div>
 
-      <div class="fixed inset-x-0 bottom-0 bg-slate-50 px-4 pb-8 pt-4">
+      <div class="fixed inset-x-0 bottom-0 bg-white px-4 pb-8 pt-4">
         <button
           type="submit"
           form="budgetFormMobile"
@@ -411,6 +569,58 @@ async function handleEditSubmit(
   const updatedBudget = {
     ...budget,
     initialBalance: budget.initialBalance + topUp,
+    endDate,
+  };
+
+  await saveBudget(updatedBudget);
+
+  appStore.setState({
+    budget: updatedBudget,
+    route: 'main',
+    error: null,
+  });
+}
+
+async function handleEditSubmitMobile(
+  wrapper: HTMLElement,
+  errorEl: HTMLParagraphElement
+): Promise<void> {
+  const state = appStore.getState();
+  const budget = state.budget;
+
+  if (!budget) {
+    return;
+  }
+
+  errorEl.classList.add('hidden');
+  errorEl.textContent = '';
+
+  const balanceRaw = (
+    wrapper.querySelector<HTMLInputElement>('#currentBalanceMobile')?.value ?? ''
+  ).trim();
+  const topUpRaw = (wrapper.querySelector<HTMLInputElement>('#topUpMobile')?.value ?? '').trim();
+  const endDate = (
+    wrapper.querySelector<HTMLInputElement>('#endDateMobileEdit')?.value ?? ''
+  ).trim();
+
+  const base = parseRublesLocal(balanceRaw);
+  const topUp = parseRublesLocal(topUpRaw);
+
+  if (base <= 0) {
+    errorEl.textContent = 'Введите баланс';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
+  if (!endDate) {
+    errorEl.textContent = 'Выберите срок';
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
+  const updatedBudget = {
+    ...budget,
+    initialBalance: base + topUp,
     endDate,
   };
 
