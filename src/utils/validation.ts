@@ -17,7 +17,10 @@ export function parseRubles(raw: string): number {
   return Number(digits);
 }
 
-export function attachMoneyInput(input: HTMLInputElement, opts?: { emptyPlaceholder?: string }) {
+export function attachMoneyInput(
+  input: HTMLInputElement,
+  opts?: { emptyPlaceholder?: string }
+): void {
   const basePlaceholder = opts?.emptyPlaceholder ?? input.placeholder ?? '';
   const focusPlaceholder = '0 ₽';
 
@@ -25,7 +28,9 @@ export function attachMoneyInput(input: HTMLInputElement, opts?: { emptyPlacehol
     const pos = Math.max(0, input.value.length - 2);
     try {
       input.setSelectionRange(pos, pos);
-    } catch {}
+    } catch (e) {
+      void e;
+    }
   };
 
   const applyFormat = () => {

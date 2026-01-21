@@ -12,6 +12,19 @@ import { addTransaction, getAllTransactions } from '../utils/db';
 import { appStore } from '../utils/state';
 import { attachMoneyInput, parseTransactionForm } from '../utils/validation';
 
+interface BudgetWithCreatedAt {
+  initialBalance: number;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
+interface Tx {
+  type: 'expense' | 'income';
+  amount: number;
+  date: string;
+}
+
 function formatMoney(n: number): string {
   return `${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(n)} ₽`;
 }
@@ -34,10 +47,7 @@ function formatRuDayMonth(iso: string): string {
   return format(d, 'd MMMM', { locale: ru });
 }
 
-function averageSpentPerDay(
-  budget: { startDate: string },
-  txs: Array<{ type: 'expense' | 'income'; amount: number; date: string }>
-): number {
+function averageSpentPerDay(budget: { startDate: string }, txs: Tx[]): number {
   const start = parseISO(budget.startDate);
   const today = new Date();
   const daysPassed = Math.max(
@@ -57,26 +67,31 @@ export function renderMainPage(): HTMLElement {
   const wrapper = document.createElement('div');
   wrapper.className = 'min-h-screen bg-slate-50';
 
-  const budget = state.budget;
+  const budget = state.budget as BudgetWithCreatedAt | null;
   if (!budget) {
     appStore.setState({ route: 'start' });
     return wrapper;
   }
 
   const todayISO = formatISODate(new Date());
-  const txs = state.transactions;
+  const txs = state.transactions as Tx[];
 
-  const total = totalBalance(budget, txs);
-  const daily = plannedDailyBudget(budget);
-  const leftToday = todayLeft(budget, txs, todayISO);
-  const daysLeft = remainingDays(budget, todayISO);
+  const safeBudget: BudgetWithCreatedAt = {
+    ...budget,
+    createdAt: budget.createdAt || todayISO,
+  };
+
+  const total = totalBalance(safeBudget, txs);
+  const daily = plannedDailyBudget(safeBudget);
+  const leftToday = todayLeft(safeBudget, txs, todayISO);
+  const daysLeft = remainingDays(safeBudget, todayISO);
 
   const lastExpenses = txs
     .filter(t => t.type === 'expense')
     .slice(0, 3)
     .map(t => ({ ...t, amount: Math.abs(t.amount) }));
 
-  const avgSpent = averageSpentPerDay(budget, txs);
+  const avgSpent = averageSpentPerDay(safeBudget, txs);
 
   const cheerText =
     leftToday >= 0
@@ -86,12 +101,12 @@ export function renderMainPage(): HTMLElement {
   const todayTone = leftToday >= 0 ? 'text-emerald-500' : 'text-red-600';
 
   wrapper.innerHTML = `
-    <div class="mx-auto flex w-full max-w-[558px] flex-col gap-2 px-4 py-6">
+    <div class="mx-auto flex w-full max-w-[558px] flex-col gap-2 px-4 pt-16 pb-6">
       <!-- CARD 1: TOTAL -->
       <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2">
-            <div class="flex-1 text-[18px] font-semibold leading-[1.3] text-slate-500">
+            <div class="flex-1 text-[18px] font-[600] leading-[1.3] text-slate-500">
               Общий баланс
             </div>
 
@@ -182,23 +197,31 @@ export function renderMainPage(): HTMLElement {
             </div>
           </div>
 
-          <div class="flex flex-col gap-1">
+          <div class="flex flex-col">
             ${
               lastExpenses.length
                 ? lastExpenses
-                    .map(
-                      t => `
+                    .map((t, idx) => {
+                      const divider =
+                        idx === lastExpenses.length - 1
+                          ? ''
+                          : `<div class="my-1.5 h-px w-full bg-slate-500"></div>`;
+
+                      return `
                         <div class="flex items-baseline gap-3">
-                          <div class="flex-1 text-[18px] font-semibold leading-[1.3] text-slate-900">
-                            ${formatMoney(t.amount)}
-                          </div>
+                          <div class="flex-1 text-[18px] leading-[1.3] text-slate-900">
+                           <span class="font-semibold">
+                             ${new Intl.NumberFormat('ru-RU').format(t.amount)}
+                           </span>
+                           <span class="font-normal"> ₽</span>
+                         </div>
                           <div class="text-[16px] font-normal leading-[1.5] text-slate-500">
                             ${formatRuDayMonth(t.date)}
                           </div>
                         </div>
-                        <div class="h-px w-full bg-slate-500"></div>
-                      `
-                    )
+                        ${divider}
+                      `;
+                    })
                     .join('')
                 : `<div class="text-[16px] font-normal leading-[1.5] text-slate-500">Пока нет расходов.</div>`
             }
@@ -216,12 +239,12 @@ export function renderMainPage(): HTMLElement {
     </div>
   `;
 
-  wrapper.querySelector<HTMLButtonElement>('#editBudget')?.addEventListener('click', () => {
-    appStore.setState({ route: 'start' });
-  });
-
   wrapper.querySelector<HTMLButtonElement>('#toHistory')?.addEventListener('click', () => {
     appStore.setState({ route: 'history' });
+  });
+
+  wrapper.querySelector<HTMLButtonElement>('#editBudget')?.addEventListener('click', () => {
+    appStore.setState({ route: 'start' });
   });
 
   const form = wrapper.querySelector<HTMLFormElement>('#txForm');
