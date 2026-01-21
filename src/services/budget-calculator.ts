@@ -1,4 +1,4 @@
-import { differenceInCalendarDays, parseISO } from 'date-fns';
+import { differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
 
 import type { Budget, Transaction } from '../models/schemas';
 
@@ -9,9 +9,9 @@ export function periodDays(budget: Budget): number {
 }
 
 export function remainingDays(budget: Budget, todayISO: string): number {
-  const today = parseISO(todayISO);
-  const end = parseISO(budget.endDate);
-  return Math.max(0, differenceInCalendarDays(end, today) + 1);
+  const today = startOfDay(parseISO(todayISO));
+  const end = startOfDay(parseISO(budget.endDate));
+  return Math.max(0, differenceInCalendarDays(end, today));
 }
 
 export function plannedDailyBudget(budget: Budget): number {

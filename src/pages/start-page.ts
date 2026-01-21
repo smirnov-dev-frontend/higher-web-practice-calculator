@@ -33,7 +33,6 @@ function parseRublesLocal(raw: string): number {
 
 function attachPlusMoneyInput(input: HTMLInputElement): void {
   const basePlaceholder = '+0 ₽';
-  const focusPlaceholder = '+0 ₽';
 
   const setCaretBeforeCurrency = () => {
     const pos = Math.max(0, input.value.length - 2);
@@ -55,7 +54,7 @@ function attachPlusMoneyInput(input: HTMLInputElement): void {
   input.placeholder = basePlaceholder;
 
   input.addEventListener('focus', () => {
-    input.placeholder = focusPlaceholder;
+    input.placeholder = basePlaceholder;
     applyFormat();
   });
 
@@ -84,66 +83,68 @@ export function renderStartPage(): HTMLElement {
     const daysLeft = remainingDays(budget, today);
 
     wrapper.innerHTML = `
-      <div class="min-h-screen bg-slate-50">
-        <div class="mx-auto flex w-full max-w-[558px] flex-col gap-2 px-4 pt-16 pb-6">
-          <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
-            <div class="flex flex-col gap-6">
-              <div class="flex flex-col gap-3">
-                <div class="flex items-baseline gap-2">
-                  <div class="flex-1 text-[24px] font-semibold leading-[1.2] text-slate-500 font-inter">
-                    Общий баланс
+      <div class="min-h-screen bg-slate-50 px-4 pt-16 pb-6 flex flex-col items-center min-[704px]:pt-0 min-[704px]:pb-0 min-[704px]:justify-center min-[1140px]:pt-16 min-[1140px]:pb-6 min-[1140px]:justify-start">
+         <div class="w-full flex flex-col gap-2 min-[704px]:w-[524px] min-[1140px]:w-[558px]">
+            <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
+              <div class="flex flex-col gap-6">
+                <div class="flex flex-col gap-3">
+                  <div class="flex items-baseline gap-2">
+                    <div class="flex-1 font-inter text-[24px] font-semibold leading-[1.2] text-slate-500">
+                      Общий баланс
+                    </div>
+
+                    <div class="font-inter text-[16px] font-normal leading-[1.5] text-blue-500">
+                      ${formatMoney(daily)} в день
+                    </div>
                   </div>
 
-                  <div class="text-[16px] font-normal leading-[1.5] text-blue-500 font-inter">
-                    ${formatMoney(daily)} в день
+                  <div class="flex items-baseline gap-2">
+                    <div class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
+                      ${formatMoney(total)}
+                    </div>
+
+                    <div class="font-inter text-[16px] font-normal leading-[1.5] text-slate-500">
+                      на ${daysLeft} ${pluralDaysRu(daysLeft)}
+                    </div>
                   </div>
                 </div>
 
-                <div class="flex items-baseline gap-2">
-                  <div class="text-[32px] font-bold leading-[1.2] text-slate-900 font-inter">
-                    ${formatMoney(total)}
+                <form id="editBudgetForm" class="flex w-full flex-col gap-4">
+                  <div class="flex flex-col gap-1">
+                    <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+                      Пополнить
+                    </div>
+
+                    <input
+                      id="topUp"
+                      name="topUp"
+                      type="text"
+                      inputmode="numeric"
+                      placeholder="+0 ₽"
+                      class="h-12 w-full rounded-lg border-2 border-blue-500 bg-white px-3 font-inter text-[16px] font-normal leading-[1.5] text-slate-900 outline-none"
+                    />
                   </div>
-                  <div class="text-[16px] font-normal leading-[1.5] text-slate-500 font-inter">
-                    на ${daysLeft} ${pluralDaysRu(daysLeft)}
+
+                  <div class="flex flex-col gap-1">
+                    <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
+                      На срок
+                    </div>
+                    ${PeriodSelect({ id: 'endDate', minDateISO: today })}
                   </div>
-                </div>
+
+                  <p id="editFormError" class="hidden text-sm text-red-600"></p>
+
+                  <button
+                    type="submit"
+                    id="saveEditBtn"
+                    class="h-12 w-full rounded-[4px] bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
+                  >
+                    Сохранить
+                  </button>
+                </form>
               </div>
-
-              <form id="editBudgetForm" class="flex w-full flex-col gap-4">
-                <div class="flex flex-col gap-1">
-                  <div class="ml-3 font-inter font-normal text-slate-500" style="font-size: 12px; line-height: 140%;">
-                    Пополнить
-                  </div>
-
-                  <input
-                    id="topUp"
-                    name="topUp"
-                    type="text"
-                    inputmode="numeric"
-                    placeholder="+0 ₽"
-                    class="h-12 w-full rounded-lg border-2 border-blue-500 bg-white px-3 text-[16px] font-normal leading-[1.5] text-slate-900 outline-none font-inter"
-                  />
-                </div>
-                
-                <div class="flex flex-col gap-1">
-                  <div class="ml-3 font-inter font-normal text-slate-500" style="font-size: 12px; line-height: 140%;">
-                    На срок
-                  </div>
-                  ${PeriodSelect({ id: 'endDate', minDateISO: today })}
-                </div>
-
-                <p id="editFormError" class="hidden text-sm text-red-600"></p>
-
-                <button
-                  type="submit"
-                  id="saveEditBtn"
-                  class="h-12 w-full rounded-[4px] bg-blue-500 px-4 text-[16px] font-medium leading-[1.5] text-white hover:bg-blue-500/85 font-inter transition-colors duration-150"
-                >
-                  Сохранить
-                </button>
-              </form>
-            </div>
-          </section>
+            </section>
+          </div>
         </div>
       </div>
     `;
@@ -177,15 +178,15 @@ export function renderStartPage(): HTMLElement {
 
   wrapper.innerHTML = `
     <div class="min-h-screen bg-slate-50">
-      <div class="mx-auto flex min-h-screen w-full max-w-6xl flex-col items-center justify-center pb-16 px-4">
-        <div class="w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-6 shadow-md" style="max-width: 558px;">
-          <h1 class="text-slate-900 font-inter font-bold" style="font-size: 32px; line-height: 120%;">
+      <div class="mx-auto flex min-h-screen w-full flex-col items-center justify-center px-4 pb-16">
+        <div class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-md min-[704px]:w-[524px] min-[1140px]:w-[558px]">
+          <h1 class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
             Начнём!
           </h1>
 
           <form id="budgetForm" class="mt-6 flex w-full flex-col gap-4">
             <div class="flex flex-col gap-1">
-              <div class="ml-3 font-inter font-normal text-slate-500" style="font-size: 12px; line-height: 140%;">
+              <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
                 Укажите баланс
               </div>
               ${InputField({
@@ -197,7 +198,7 @@ export function renderStartPage(): HTMLElement {
             </div>
 
             <div class="flex flex-col gap-1">
-              <div class="ml-3 font-inter font-normal text-slate-500" style="font-size: 12px; line-height: 140%;">
+              <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
                 На срок
               </div>
               ${PeriodSelect({ id: 'endDate', minDateISO: today })}
@@ -208,8 +209,7 @@ export function renderStartPage(): HTMLElement {
             <button
               type="submit"
               id="calculateBtn"
-              class="h-12 w-full rounded px-4 text-white font-inter font-medium transition-colors duration-150"
-              style="background: #3B82F6; font-size: 16px; line-height: 150%;"
+              class="h-12 w-full rounded bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
             >
               Рассчитать
             </button>
@@ -237,20 +237,6 @@ export function renderStartPage(): HTMLElement {
   }
 
   initPeriodSelect(wrapper, { id: 'endDate', minDateISO: today });
-
-  const calcBtn = wrapper.querySelector<HTMLButtonElement>('#calculateBtn');
-  if (calcBtn) {
-    const base = '#3B82F6';
-    const hover = 'rgba(59,130,246,0.85)';
-
-    calcBtn.addEventListener('mouseenter', () => {
-      calcBtn.style.background = hover;
-    });
-
-    calcBtn.addEventListener('mouseleave', () => {
-      calcBtn.style.background = base;
-    });
-  }
 
   return wrapper;
 }

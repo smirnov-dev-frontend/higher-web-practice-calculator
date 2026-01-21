@@ -1,4 +1,4 @@
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, differenceInCalendarDays, startOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 import {
@@ -48,16 +48,18 @@ function formatRuDayMonth(iso: string): string {
 }
 
 function averageSpentPerDay(budget: { startDate: string }, txs: Tx[]): number {
-  const start = parseISO(budget.startDate);
-  const today = new Date();
-  const daysPassed = Math.max(
-    1,
-    Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
-  );
+  const start = startOfDay(parseISO(budget.startDate));
+  const today = startOfDay(new Date());
+
+  const daysPassed = Math.max(1, differenceInCalendarDays(today, start) + 1);
 
   const spent = txs
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  if (spent === 0) {
+    return 0;
+  }
 
   return spent / daysPassed;
 }
@@ -101,7 +103,8 @@ export function renderMainPage(): HTMLElement {
   const todayTone = leftToday >= 0 ? 'text-emerald-500' : 'text-red-600';
 
   wrapper.innerHTML = `
-    <div class="mx-auto flex w-full max-w-[558px] flex-col gap-2 px-4 pt-16 pb-6">
+    <div class="min-h-screen bg-slate-50 px-4 pt-16 pb-6 flex flex-col items-center min-[704px]:pt-0 min-[704px]:pb-0 min-[704px]:justify-center min-[1140px]:pt-16 min-[1140px]:pb-6 min-[1140px]:justify-start">
+      <div class="w-full flex flex-col gap-2 min-[704px]:w-[524px] min-[1140px]:w-[558px]">
       <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
         <div class="flex flex-col gap-3">
           <div class="flex items-center gap-2">
