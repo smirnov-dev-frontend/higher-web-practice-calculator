@@ -1,1 +1,12 @@
-@import './styles/tailwind.css';
+@import 'tailwindcss';
+
+html {
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
+}
