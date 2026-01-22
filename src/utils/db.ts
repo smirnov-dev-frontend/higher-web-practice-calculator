@@ -50,8 +50,7 @@ export async function getBudget(): Promise<Budget | undefined> {
 
 export async function addTransaction(tx: Omit<Transaction, 'id'>): Promise<number> {
   const db = await dbPromise;
-  const id = await db.add(transactionStore, tx);
-  return id;
+  return db.add(transactionStore, tx);
 }
 
 export async function deleteTransaction(id: number): Promise<void> {
@@ -59,16 +58,30 @@ export async function deleteTransaction(id: number): Promise<void> {
   await db.delete(transactionStore, id);
 }
 
+/**
+ * Все транзакции по убыванию даты (YYYY-MM-DD), внутри дня — по убыванию id.
+ * Используем индекс date, чтобы не сортировать огромный массив руками.
+ */
 export async function getAllTransactions(): Promise<Transaction[]> {
   const db = await dbPromise;
-  const all = await db.getAll(transactionStore);
+  const tx = db.transaction(transactionStore, 'readonly');
+  const index = tx.store.index('date');
 
-  all.sort((a, b) => {
+  const result: Transaction[] = [];
+
+  let cursor = await index.openCursor(null, 'prev');
+  while (cursor) {
+    result.push(cursor.value);
+    cursor = await cursor.continue();
+  }
+
+  result.sort((a, b) => {
     if (a.date === b.date) {
       return (b.id ?? 0) - (a.id ?? 0);
     }
     return a.date < b.date ? 1 : -1;
   });
 
-  return all;
+  await tx.done;
+  return result;
 }

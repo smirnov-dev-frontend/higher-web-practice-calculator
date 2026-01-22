@@ -5,8 +5,7 @@ import { BudgetSchema, TransactionSchema, type Budget, type Transaction } from '
 import { formatISODate } from './dates';
 
 export function formatRubles(value: number): string {
-  const n = Math.floor(Math.abs(value));
-  return `${new Intl.NumberFormat('ru-RU').format(n)} ₽`;
+  return `${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(Math.abs(value))} ₽`;
 }
 
 export function parseRubles(raw: string): number {
@@ -63,16 +62,22 @@ function zodFirstError(err: z.ZodError): string {
   return first?.message ?? 'Ошибка валидации';
 }
 
+/**
+ * Парсер бюджета.
+ * - createdAt: если не передан — ставим "сегодня" (режим создания).
+ * - если передан — сохраняем (режим редактирования).
+ */
 export function parseBudgetForm(input: {
   initialBalance: string;
   startDate: string;
   endDate: string;
+  createdAt?: string;
 }): { ok: true; value: Budget } | { ok: false; error: string } {
   const candidate = {
     initialBalance: parseRubles(input.initialBalance),
     startDate: input.startDate,
     endDate: input.endDate,
-    createdAt: formatISODate(new Date()),
+    createdAt: input.createdAt ?? formatISODate(new Date()),
   };
 
   const res = BudgetSchema.safeParse(candidate);
@@ -85,7 +90,7 @@ export function parseBudgetForm(input: {
 
 export function parseTransactionForm(input: {
   amount: string;
-  type: string;
+  type: Transaction['type'];
   date: string;
 }): { ok: true; value: Omit<Transaction, 'id'> } | { ok: false; error: string } {
   const candidate = {

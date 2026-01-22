@@ -165,6 +165,7 @@ export function PeriodSelect(props: PeriodSelectProps): string {
         class="flex h-12 w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-3 text-[16px] font-normal leading-[1.5] text-slate-500 outline-none focus:border-2 focus:border-blue-500"
         aria-haspopup="listbox"
         aria-expanded="false"
+        aria-controls="${id}__panel"
       >
         <span id="${id}__text">Выберите срок</span>
         <span class="ml-3 text-slate-500">
@@ -265,6 +266,15 @@ export function initPeriodSelect(root: HTMLElement, props: PeriodSelectProps): v
     return;
   }
 
+  const prevController = (hidden as unknown as { __psAbort?: AbortController }).__psAbort;
+  if (prevController) {
+    prevController.abort();
+  }
+
+  const controller = new AbortController();
+  (hidden as unknown as { __psAbort?: AbortController }).__psAbort = controller;
+  const { signal } = controller;
+
   PRESETS.forEach(preset => {
     if (preset.key === 'custom') {
       return;
@@ -311,17 +321,18 @@ export function initPeriodSelect(root: HTMLElement, props: PeriodSelectProps): v
     }
   };
 
-  const close = () => {
-    setExpanded(false);
-  };
+  const close = () => setExpanded(false);
+  const openPanel = () => setExpanded(true);
 
-  const openPanel = () => {
-    setExpanded(true);
+  const emitValueEvents = () => {
+    hidden.dispatchEvent(new Event('input', { bubbles: true }));
+    hidden.dispatchEvent(new Event('change', { bubbles: true }));
   };
 
   const setSelectedEnd = (end: Date) => {
     hidden.value = toISODate(end);
     updateTextFromValue();
+    emitValueEvents();
     close();
   };
 
@@ -366,9 +377,13 @@ export function initPeriodSelect(root: HTMLElement, props: PeriodSelectProps): v
 
       if (inMonth && !disabled) {
         const date = new Date(d);
-        btn.addEventListener('click', () => {
-          setSelectedEnd(date);
-        });
+        btn.addEventListener(
+          'click',
+          () => {
+            setSelectedEnd(date);
+          },
+          { signal }
+        );
       }
 
       grid.append(btn);
@@ -378,70 +393,100 @@ export function initPeriodSelect(root: HTMLElement, props: PeriodSelectProps): v
     updatePrevDisabled();
   };
 
-  trigger.addEventListener('click', () => {
-    if (open) {
-      close();
-    } else {
-      openPanel();
-    }
-  });
-
-  document.addEventListener('click', e => {
-    const target = e.target as Node;
-    if (!open) {
-      return;
-    }
-    if (!root.contains(target)) {
-      close();
-    }
-  });
-
-  list.addEventListener('click', e => {
-    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-preset]');
-    if (!btn) {
-      return;
-    }
-
-    const key = btn.dataset.preset as PresetKey;
-
-    if (key === 'custom') {
-      modeList.classList.add('hidden');
-      modeCalendar.classList.remove('hidden');
-
-      text.textContent = 'Выбор даты';
-      trigger.classList.add('text-slate-500');
-      trigger.classList.remove('text-slate-900');
-
-      if (hidden.value) {
-        calendarMonth = startOfMonth(parseISODate(hidden.value));
+  trigger.addEventListener(
+    'click',
+    () => {
+      if (open) {
+        close();
       } else {
-        calendarMonth = startOfMonth(today);
+        openPanel();
+      }
+    },
+    { signal }
+  );
+
+  document.addEventListener(
+    'click',
+    e => {
+      const target = e.target as Node;
+      if (!open) {
+        return;
+      }
+      if (!root.contains(target)) {
+        close();
+      }
+    },
+    { signal }
+  );
+  document.addEventListener(
+    'keydown',
+    e => {
+      if (!open) {
+        return;
+      }
+      if (e.key === 'Escape') {
+        close();
+      }
+    },
+    { signal }
+  );
+
+  list.addEventListener(
+    'click',
+    e => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-preset]');
+      if (!btn) {
+        return;
       }
 
+      const key = btn.dataset.preset as PresetKey;
+
+      if (key === 'custom') {
+        modeList.classList.add('hidden');
+        modeCalendar.classList.remove('hidden');
+
+        text.textContent = 'Выбор даты';
+        trigger.classList.add('text-slate-500');
+        trigger.classList.remove('text-slate-900');
+
+        calendarMonth = hidden.value
+          ? startOfMonth(parseISODate(hidden.value))
+          : startOfMonth(today);
+
+        renderCalendar();
+        return;
+      }
+
+      const endDate = computeEndDate(today, key);
+      if (!endDate) {
+        return;
+      }
+
+      setSelectedEnd(endDate);
+    },
+    { signal }
+  );
+
+  prevBtn.addEventListener(
+    'click',
+    () => {
+      if (prevBtn.disabled) {
+        return;
+      }
+      calendarMonth = startOfMonth(addMonths(calendarMonth, -1));
       renderCalendar();
-      return;
-    }
+    },
+    { signal }
+  );
 
-    const endDate = computeEndDate(today, key);
-    if (!endDate) {
-      return;
-    }
-
-    setSelectedEnd(endDate);
-  });
-
-  prevBtn.addEventListener('click', () => {
-    if (prevBtn.disabled) {
-      return;
-    }
-    calendarMonth = startOfMonth(addMonths(calendarMonth, -1));
-    renderCalendar();
-  });
-
-  nextBtn.addEventListener('click', () => {
-    calendarMonth = startOfMonth(addMonths(calendarMonth, 1));
-    renderCalendar();
-  });
+  nextBtn.addEventListener(
+    'click',
+    () => {
+      calendarMonth = startOfMonth(addMonths(calendarMonth, 1));
+      renderCalendar();
+    },
+    { signal }
+  );
 
   updateTextFromValue();
 }

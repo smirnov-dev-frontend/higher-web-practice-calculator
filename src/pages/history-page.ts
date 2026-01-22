@@ -7,69 +7,84 @@ import { appStore } from '../utils/state';
 import type { Transaction } from '../models/schemas';
 
 function formatRuDayMonth(iso: string): string {
-   const d = parseISO(iso);
-   return format(d, 'd MMMM', { locale: ru });
+  const d = parseISO(iso);
+  return format(d, 'd MMMM', { locale: ru });
 }
 
 function averageSpentPerDay(budget: { startDate: string }, txs: Transaction[]): number {
-   const start = startOfDay(parseISO(budget.startDate));
-   const today = startOfDay(new Date());
+  const start = startOfDay(parseISO(budget.startDate));
+  const today = startOfDay(new Date());
 
-   const daysPassed = Math.max(1, differenceInCalendarDays(today, start) + 1);
+  const daysPassed = Math.max(1, differenceInCalendarDays(today, start) + 1);
 
-   const spent = txs
-      .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const spent = txs
+    .filter(t => t.type === 'expense')
+    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
 
-   if (spent === 0) {
-      return 0;
-   }
-
-   return spent / daysPassed;
+  if (spent === 0) {
+    return 0;
+  }
+  return spent / daysPassed;
 }
+
 function formatMoney(n: number): string {
-   return `${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(n)} ₽`;
+  return `${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(n)} ₽`;
 }
 
 export function renderHistoryPage(): HTMLElement {
-   const state = appStore.getState();
-   const wrapper = document.createElement('div');
-   wrapper.className = 'min-h-screen bg-slate-50';
+  const state = appStore.getState();
+  const wrapper = document.createElement('div');
+  wrapper.className = 'min-h-screen bg-slate-50';
 
-   const budget = state.budget;
-   if (!budget) {
-      appStore.setState({ route: 'start' });
-      return wrapper;
-   }
+  const budget = state.budget;
+  if (!budget) {
+    appStore.setState({ route: 'start' });
+    return wrapper;
+  }
 
-   const originalTxs = (state.transactions as Transaction[]) ?? [];
-   const deletedIds = new Set<number>();
+  const originalTxs = (state.transactions as Transaction[]) ?? [];
+  const deletedIds = new Set<number>();
 
-   const goMain = () => appStore.setState({ route: 'main' });
+  const goMain = () => appStore.setState({ route: 'main' });
 
-   const getVisibleTxs = (): Transaction[] => originalTxs.filter(t => !deletedIds.has(Number(t.id)));
+  const getVisibleTxs = (): Transaction[] =>
+    originalTxs.filter(t => (typeof t.id === 'number' ? !deletedIds.has(t.id) : true));
 
-   const getVisibleExpenses = (): Array<Transaction & { amount: number }> =>
-      getVisibleTxs()
-         .filter(t => t.type === 'expense')
-         .map(t => ({ ...t, amount: Math.abs(t.amount) }));
+  const getVisibleExpenses = (): Array<Transaction & { amount: number }> =>
+    getVisibleTxs()
+      .filter(t => t.type === 'expense')
+      .map(t => ({ ...t, amount: Math.abs(t.amount) }));
 
-   const renderExpensesList = (
-      expenses: Array<Transaction & { amount: number }>,
-      mobile: boolean
-   ) => {
-      if (!expenses.length) {
-         return `<div class="${mobile ? 'mt-4' : ''} text-[16px] font-normal leading-[1.5] text-slate-500 font-inter">Пока нет расходов.</div>`;
-      }
+  const renderExpensesList = (
+    expenses: Array<Transaction & { amount: number }>,
+    mobile: boolean
+  ) => {
+    if (!expenses.length) {
+      return `<div class="${mobile ? 'mt-4' : ''} text-[16px] font-normal leading-[1.5] text-slate-500 font-inter">Пока нет расходов.</div>`;
+    }
 
-      return expenses
-         .map((t, idx) => {
-            const divider =
-               idx === expenses.length - 1
-                  ? ''
-                  : `<div class="h-px w-full ${mobile ? 'bg-slate-200' : 'bg-slate-500'}"></div>`;
+    return expenses
+      .map((t, idx) => {
+        const divider =
+          idx === expenses.length - 1
+            ? ''
+            : `<div class="h-px w-full ${mobile ? 'bg-slate-200' : 'bg-slate-500'}"></div>`;
 
-            return `
+        const deleteBtn =
+          typeof t.id === 'number'
+            ? `
+            <button
+              type="button"
+              class="ml-1 inline-flex ${mobile ? 'h-8 w-8' : 'h-6 w-6'} items-center justify-center text-slate-500 hover:text-slate-700"
+              aria-label="Удалить"
+              data-del-id="${String(t.id)}"
+            >
+              ${renderDeleteIcon()}
+            </button>
+          `
+            : '';
+
+        return `
           <div class="${mobile ? 'py-2' : ''} flex items-baseline gap-3">
             <div class="flex-1 text-[18px] ${mobile ? 'font-normal' : 'font-semibold'} leading-[1.3] text-slate-900 font-inter">
               ${formatMoney(t.amount)}
@@ -79,28 +94,21 @@ export function renderHistoryPage(): HTMLElement {
               ${formatRuDayMonth(t.date)}
             </div>
 
-            <button
-              type="button"
-              class="ml-1 inline-flex ${mobile ? 'h-8 w-8' : 'h-6 w-6'} items-center justify-center text-slate-500 hover:text-slate-700"
-              aria-label="Удалить"
-              data-del-id="${String(t.id)}"
-            >
-              ${renderDeleteIcon()}
-            </button>
+            ${deleteBtn}
           </div>
           ${divider}
         `;
-         })
-         .join('');
-   };
+      })
+      .join('');
+  };
 
-   const renderAll = () => {
-      const visibleTxs = getVisibleTxs();
-      const visibleExpenses = getVisibleExpenses();
-      const avgSpent = averageSpentPerDay(budget, visibleTxs);
-      const hasChanges = deletedIds.size > 0;
+  const renderAll = () => {
+    const visibleTxs = getVisibleTxs();
+    const visibleExpenses = getVisibleExpenses();
+    const avgSpent = averageSpentPerDay(budget, visibleTxs);
+    const hasChanges = deletedIds.size > 0;
 
-      wrapper.innerHTML = `
+    wrapper.innerHTML = `
       <div class="min-[704px]:hidden min-h-screen bg-white px-4 py-8">
         <div class="pb-32">
           <div class="flex flex-col gap-1">
@@ -108,7 +116,7 @@ export function renderHistoryPage(): HTMLElement {
               История расходов
             </div>
             <div id="avgMobile" class="text-[12px] font-normal leading-[1.4] text-blue-500 font-inter">
-              Средние траты в день: ${formatMoney(avgSpent)} ₽
+              Средние траты в день: ${formatMoney(avgSpent)}
             </div>
           </div>
 
@@ -157,7 +165,7 @@ export function renderHistoryPage(): HTMLElement {
                   История расходов
                 </div>
                 <div id="avgDesktop" class="text-[12px] font-normal leading-[1.4] text-blue-500 font-inter">
-                  Средние траты в день: ${formatMoney(avgSpent)} ₽
+                  Средние траты в день: ${formatMoney(avgSpent)}
                 </div>
               </div>
 
@@ -165,8 +173,9 @@ export function renderHistoryPage(): HTMLElement {
                 ${renderExpensesList(visibleExpenses, false)}
               </div>
 
-              ${hasChanges
-            ? `
+              ${
+                hasChanges
+                  ? `
                     <button
                       id="cancelBtnDesktop"
                       type="button"
@@ -182,7 +191,7 @@ export function renderHistoryPage(): HTMLElement {
                       Сохранить
                     </button>
                   `
-            : `
+                  : `
                     <button
                       id="backBtnDesktop"
                       type="button"
@@ -191,70 +200,70 @@ export function renderHistoryPage(): HTMLElement {
                       Вернуться
                     </button>
                   `
-         }
+              }
             </div>
           </section>
         </div>
       </div>
     `;
 
-      wrapper.querySelector<HTMLButtonElement>('#backBtnMobile')?.addEventListener('click', goMain);
-      wrapper.querySelector<HTMLButtonElement>('#backBtnDesktop')?.addEventListener('click', goMain);
+    wrapper.querySelector<HTMLButtonElement>('#backBtnMobile')?.addEventListener('click', goMain);
+    wrapper.querySelector<HTMLButtonElement>('#backBtnDesktop')?.addEventListener('click', goMain);
 
-      wrapper.querySelector<HTMLButtonElement>('#cancelBtnMobile')?.addEventListener('click', goMain);
-      wrapper
-         .querySelector<HTMLButtonElement>('#cancelBtnDesktop')
-         ?.addEventListener('click', goMain);
+    wrapper.querySelector<HTMLButtonElement>('#cancelBtnMobile')?.addEventListener('click', goMain);
+    wrapper
+      .querySelector<HTMLButtonElement>('#cancelBtnDesktop')
+      ?.addEventListener('click', goMain);
 
-      const save = () => {
-         void (async () => {
-            if (!deletedIds.size) {
-               goMain();
-               return;
-            }
+    const save = () => {
+      void (async () => {
+        if (!deletedIds.size) {
+          goMain();
+          return;
+        }
 
-            const ids = Array.from(deletedIds.values());
-            await Promise.all(ids.map(id => deleteTransaction(id)));
+        const ids = Array.from(deletedIds.values());
+        await Promise.all(ids.map(id => deleteTransaction(id)));
 
-            const fresh = await getAllTransactions();
-            appStore.setState({ transactions: fresh });
+        const fresh = await getAllTransactions();
+        appStore.setState({ transactions: fresh });
 
-            goMain();
-         })();
-      };
+        goMain();
+      })();
+    };
 
-      wrapper.querySelector<HTMLButtonElement>('#saveBtnMobile')?.addEventListener('click', save);
-      wrapper.querySelector<HTMLButtonElement>('#saveBtnDesktop')?.addEventListener('click', save);
+    wrapper.querySelector<HTMLButtonElement>('#saveBtnMobile')?.addEventListener('click', save);
+    wrapper.querySelector<HTMLButtonElement>('#saveBtnDesktop')?.addEventListener('click', save);
 
-      const onDeleteClick = (e: Event) => {
-         const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-del-id]');
-         if (!btn) {
-            return;
-         }
+    const onDeleteClick = (e: Event) => {
+      const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('button[data-del-id]');
+      if (!btn) {
+        return;
+      }
 
-         const id = Number(btn.dataset.delId);
-         if (!Number.isFinite(id)) {
-            return;
-         }
+      const id = Number(btn.dataset.delId);
+      if (!Number.isFinite(id)) {
+        return;
+      }
 
-         deletedIds.add(id);
-         renderAll();
-      };
+      deletedIds.add(id);
+      renderAll();
+    };
 
-      wrapper
-         .querySelector<HTMLElement>('#historyListMobile')
-         ?.addEventListener('click', onDeleteClick);
-      wrapper
-         .querySelector<HTMLElement>('#historyListDesktop')
-         ?.addEventListener('click', onDeleteClick);
-   };
+    wrapper
+      .querySelector<HTMLElement>('#historyListMobile')
+      ?.addEventListener('click', onDeleteClick);
+    wrapper
+      .querySelector<HTMLElement>('#historyListDesktop')
+      ?.addEventListener('click', onDeleteClick);
+  };
 
-   renderAll();
-   return wrapper;
+  renderAll();
+  return wrapper;
 }
 
 function renderDeleteIcon(): string {
-   return `
+  return `
     <img
       src="/assets/delete.svg"
       alt=""

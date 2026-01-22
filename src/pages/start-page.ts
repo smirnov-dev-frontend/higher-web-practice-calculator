@@ -225,31 +225,22 @@ export function renderStartPage(): HTMLElement {
       </div>
     `;
 
-    const endHidden = wrapper.querySelector<HTMLInputElement>('#endDate');
-    if (endHidden) {
-      endHidden.value = budget.endDate;
+    const endDesktop = wrapper.querySelector<HTMLInputElement>('#endDate');
+    if (endDesktop) {
+      endDesktop.value = budget.endDate;
     }
     initPeriodSelect(wrapper, { id: 'endDate', minDateISO: today });
+
+    const endMobile = wrapper.querySelector<HTMLInputElement>('#endDateMobileEdit');
+    if (endMobile) {
+      endMobile.value = budget.endDate;
+    }
+    initPeriodSelect(wrapper, { id: 'endDateMobileEdit', minDateISO: today });
 
     const topUpInput = wrapper.querySelector<HTMLInputElement>('#topUp');
     if (topUpInput) {
       attachPlusMoneyInput(topUpInput);
     }
-
-    const form = wrapper.querySelector<HTMLFormElement>('#editBudgetForm');
-    const errorEl = wrapper.querySelector<HTMLParagraphElement>('#editFormError');
-    if (form && errorEl) {
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        void handleEditSubmit(wrapper, errorEl);
-      });
-    }
-
-    const endHiddenMobileEdit = wrapper.querySelector<HTMLInputElement>('#endDateMobileEdit');
-    if (endHiddenMobileEdit) {
-      endHiddenMobileEdit.value = budget.endDate;
-    }
-    initPeriodSelect(wrapper, { id: 'endDateMobileEdit', minDateISO: today });
 
     const currentBalanceMobile = wrapper.querySelector<HTMLInputElement>('#currentBalanceMobile');
     if (currentBalanceMobile) {
@@ -260,6 +251,15 @@ export function renderStartPage(): HTMLElement {
     const topUpMobile = wrapper.querySelector<HTMLInputElement>('#topUpMobile');
     if (topUpMobile) {
       attachPlusMoneyInput(topUpMobile);
+    }
+
+    const form = wrapper.querySelector<HTMLFormElement>('#editBudgetForm');
+    const errorEl = wrapper.querySelector<HTMLParagraphElement>('#editFormError');
+    if (form && errorEl) {
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        void handleEditSubmit(wrapper, errorEl);
+      });
     }
 
     const formMobileEdit = wrapper.querySelector<HTMLFormElement>('#editBudgetFormMobile');
@@ -309,9 +309,7 @@ export function renderStartPage(): HTMLElement {
 
       const syncButtons = () => {
         const changed = hasChanges();
-
         backBtnMobile.classList.toggle('hidden', changed);
-
         cancelBtnMobile.classList.toggle('hidden', !changed);
         saveBtnMobile.classList.toggle('hidden', !changed);
       };
@@ -319,13 +317,8 @@ export function renderStartPage(): HTMLElement {
       balanceEl.addEventListener('input', syncButtons);
       topUpEl.addEventListener('input', syncButtons);
 
-      let lastDate = endDateEl.value;
-      window.setInterval(() => {
-        if (endDateEl.value !== lastDate) {
-          lastDate = endDateEl.value;
-          syncButtons();
-        }
-      }, 100);
+      endDateEl.addEventListener('input', syncButtons);
+      endDateEl.addEventListener('change', syncButtons);
 
       syncButtons();
     }
@@ -467,13 +460,8 @@ export function renderStartPage(): HTMLElement {
     balanceInputMobile.addEventListener('input', syncButton);
     balanceInputMobile.addEventListener('blur', syncButton);
 
-    let lastDate = endHiddenMobile.value;
-    window.setInterval(() => {
-      if (endHiddenMobile.value !== lastDate) {
-        lastDate = endHiddenMobile.value;
-        syncButton();
-      }
-    }, 100);
+    endHiddenMobile.addEventListener('input', syncButton);
+    endHiddenMobile.addEventListener('change', syncButton);
 
     syncButton();
   }
@@ -547,7 +535,6 @@ async function handleEditSubmit(
 ): Promise<void> {
   const state = appStore.getState();
   const budget = state.budget;
-
   if (!budget) {
     return;
   }
@@ -558,24 +545,26 @@ async function handleEditSubmit(
   const topUpRaw = (wrapper.querySelector<HTMLInputElement>('#topUp')?.value ?? '').trim();
   const endDate = (wrapper.querySelector<HTMLInputElement>('#endDate')?.value ?? '').trim();
 
-  if (!endDate) {
-    errorEl.textContent = 'Выберите срок';
+  const topUp = parseRublesLocal(topUpRaw);
+  const nextInitialBalance = budget.initialBalance + topUp;
+
+  const parsed = parseBudgetForm({
+    initialBalance: String(nextInitialBalance),
+    startDate: budget.startDate,
+    endDate,
+    createdAt: budget.createdAt,
+  });
+
+  if (!parsed.ok) {
+    errorEl.textContent = parsed.error;
     errorEl.classList.remove('hidden');
     return;
   }
 
-  const topUp = parseRublesLocal(topUpRaw);
-
-  const updatedBudget = {
-    ...budget,
-    initialBalance: budget.initialBalance + topUp,
-    endDate,
-  };
-
-  await saveBudget(updatedBudget);
+  await saveBudget(parsed.value);
 
   appStore.setState({
-    budget: updatedBudget,
+    budget: parsed.value,
     route: 'main',
     error: null,
   });
@@ -587,7 +576,6 @@ async function handleEditSubmitMobile(
 ): Promise<void> {
   const state = appStore.getState();
   const budget = state.budget;
-
   if (!budget) {
     return;
   }
@@ -605,29 +593,25 @@ async function handleEditSubmitMobile(
 
   const base = parseRublesLocal(balanceRaw);
   const topUp = parseRublesLocal(topUpRaw);
+  const nextInitialBalance = base + topUp;
 
-  if (base <= 0) {
-    errorEl.textContent = 'Введите баланс';
-    errorEl.classList.remove('hidden');
-    return;
-  }
-
-  if (!endDate) {
-    errorEl.textContent = 'Выберите срок';
-    errorEl.classList.remove('hidden');
-    return;
-  }
-
-  const updatedBudget = {
-    ...budget,
-    initialBalance: base + topUp,
+  const parsed = parseBudgetForm({
+    initialBalance: String(nextInitialBalance),
+    startDate: budget.startDate,
     endDate,
-  };
+    createdAt: budget.createdAt,
+  });
 
-  await saveBudget(updatedBudget);
+  if (!parsed.ok) {
+    errorEl.textContent = parsed.error;
+    errorEl.classList.remove('hidden');
+    return;
+  }
+
+  await saveBudget(parsed.value);
 
   appStore.setState({
-    budget: updatedBudget,
+    budget: parsed.value,
     route: 'main',
     error: null,
   });

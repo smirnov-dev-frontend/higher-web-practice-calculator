@@ -1,4 +1,4 @@
-import { parseISO, isAfter, isEqual, isValid } from 'date-fns';
+import { isAfter, isEqual, isValid, parseISO } from 'date-fns';
 import { z } from 'zod';
 
 const DateStringSchema = z
@@ -11,7 +11,7 @@ export const BudgetSchema = z
     initialBalance: z.coerce.number().positive('Баланс должен быть положительным'),
     startDate: DateStringSchema,
     endDate: DateStringSchema,
-    createdAt: DateStringSchema,
+    createdAt: DateStringSchema.optional(),
   })
   .refine(
     b => {
@@ -25,7 +25,7 @@ export const BudgetSchema = z
 export type Budget = z.infer<typeof BudgetSchema>;
 
 export const TransactionSchema = z.object({
-  id: z.number().int().positive().optional(),
+  id: z.number().int().optional(),
   amount: z.coerce.number().positive('Сумма должна быть больше 0'),
   type: z.enum(['expense', 'income']),
   date: DateStringSchema,

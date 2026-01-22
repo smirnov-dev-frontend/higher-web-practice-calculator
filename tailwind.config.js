@@ -1,14 +1,10 @@
-module.exports = {
-   content: [
-      './src/**/*.{html,ts}',
-   ],
+export default {
    theme: {
       extend: {
          fontFamily: {
-            inter: ['Inter', 'sans-serif'],
+            inter: ["Inter", "sans-serif"],
          },
       },
    },
    plugins: [],
 };
-

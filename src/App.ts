@@ -4,6 +4,9 @@ import { renderStartPage } from './pages/start-page';
 import { getAllTransactions, getBudget } from './utils/db';
 import { appStore, type Route } from './utils/state';
 
+let isInitialized = false;
+let unsubscribe: null | (() => void) = null;
+
 function renderRoute(route: Route, root: HTMLElement) {
   root.innerHTML = '';
 
@@ -20,10 +23,28 @@ function renderRoute(route: Route, root: HTMLElement) {
   root.append(renderHistoryPage());
 }
 
-export async function initApp(): Promise<void> {
+function renderApp(root: HTMLElement) {
+  const state = appStore.getState();
+
+  renderRoute(state.route, root);
+}
+
+export async function initApp(force = false): Promise<void> {
   const root = document.getElementById('app');
   if (!root) {
     throw new Error('Root element #app not found in index.html');
+  }
+
+  if (isInitialized && !force) {
+    renderApp(root);
+    return;
+  }
+  isInitialized = true;
+
+  if (!unsubscribe) {
+    unsubscribe = appStore.subscribe(() => {
+      renderApp(root);
+    });
   }
 
   appStore.setState({ loading: true, error: null });
@@ -36,6 +57,7 @@ export async function initApp(): Promise<void> {
       transactions,
       route: budget ? 'main' : 'start',
       loading: false,
+      error: null,
     });
   } catch (e) {
     appStore.setState({
@@ -45,9 +67,5 @@ export async function initApp(): Promise<void> {
     });
   }
 
-  appStore.subscribe(state => {
-    renderRoute(state.route, root);
-  });
-
-  renderRoute(appStore.getState().route, root);
+  renderApp(root);
 }
