@@ -265,7 +265,7 @@ export function renderHistoryPage(): HTMLElement {
 function renderDeleteIcon(): string {
   return `
     <img
-      src="/assets/delete.svg"
+      src="assets/delete.svg"
       alt=""
       class="h-3 w-3"
       aria-hidden="true"

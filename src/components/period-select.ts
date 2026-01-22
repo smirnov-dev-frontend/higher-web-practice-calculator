@@ -123,7 +123,7 @@ function enterIconHtml(extraClass: string = ''): string {
   const cls = ['h-2 w-4 select-none', extraClass].filter(Boolean).join(' ');
   return `
     <img
-      src="/assets/enter.svg"
+      src="assets/enter.svg"
       alt=""
       aria-hidden="true"
       draggable="false"
