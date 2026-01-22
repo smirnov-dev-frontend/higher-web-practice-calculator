@@ -198,7 +198,7 @@ export function renderStartPage(): HTMLElement {
                     type="text"
                     inputmode="numeric"
                     placeholder="+0 ₽"
-                    class="h-12 w-full rounded-lg border-2 border-blue-500 bg-white px-3 font-inter text-[16px] font-normal leading-[1.5] text-slate-900 outline-none"
+                    class="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 font-inter text-[16px] font-normal leading-[1.5] text-slate-900 outline-none focus:border-2 focus:border-blue-500"
                   />
                 </div>
 
