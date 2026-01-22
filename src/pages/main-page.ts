@@ -1,8 +1,8 @@
-import { format, parseISO } from 'date-fns';
+import { format, differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 import {
-  plannedDailyBudget,
+  averageRemainingPerDay,
   remainingDays,
   todayLeft,
   totalBalance,
@@ -48,12 +48,10 @@ function formatRuDayMonth(iso: string): string {
 }
 
 function averageSpentPerDay(budget: { startDate: string }, txs: Tx[]): number {
-  const start = parseISO(budget.startDate);
-  const today = new Date();
-  const daysPassed = Math.max(
-    1,
-    Math.ceil((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
-  );
+  const start = startOfDay(parseISO(budget.startDate));
+  const today = startOfDay(new Date());
+
+  const daysPassed = Math.max(1, differenceInCalendarDays(today, start) + 1);
 
   const spent = txs
     .filter(t => t.type === 'expense')
@@ -62,6 +60,7 @@ function averageSpentPerDay(budget: { startDate: string }, txs: Tx[]): number {
   if (spent === 0) {
     return 0;
   }
+
   return spent / daysPassed;
 }
 
@@ -93,7 +92,7 @@ export function renderMainPage(): HTMLElement {
   };
 
   const total = totalBalance(safeBudget, txs);
-  const daily = plannedDailyBudget(safeBudget);
+  const daily = averageRemainingPerDay(safeBudget, txs, todayISO);
   const leftToday = todayLeft(safeBudget, txs, todayISO);
   const daysLeft = remainingDays(safeBudget, todayISO);
 

@@ -34,17 +34,18 @@ export function todayNet(txs: Transaction[], todayISO: string): number {
       .reduce((acc, t) => acc + (t.type === 'income' ? t.amount : -t.amount), 0)
   );
 }
-
 export function todayLeft(budget: Budget, txs: Transaction[], todayISO: string): number {
   const daysLeft = remainingDays(budget, todayISO);
   if (daysLeft <= 0) {
     return 0;
   }
 
-  const balance = totalBalance(budget, txs);
-  const todayTransactions = todayNet(txs, todayISO);
+  const netToday = todayNet(txs, todayISO);
+  const balanceNow = totalBalance(budget, txs);
+  const balanceStartOfDay = round2(balanceNow - netToday);
 
-  return round2(balance / daysLeft + todayTransactions);
+  const dailyStartOfDay = round2(balanceStartOfDay / daysLeft);
+  return round2(dailyStartOfDay + netToday);
 }
 
 export function averageRemainingPerDay(
@@ -56,7 +57,12 @@ export function averageRemainingPerDay(
   if (daysLeft <= 0) {
     return 0;
   }
-  return round2(totalBalance(budget, txs) / daysLeft);
+
+  const netToday = todayNet(txs, todayISO);
+  const balanceNow = totalBalance(budget, txs);
+  const balanceStartOfDay = round2(balanceNow - netToday);
+
+  return round2(balanceStartOfDay / daysLeft);
 }
 
 export function totalExpenses(txs: Transaction[]): number {
