@@ -21,7 +21,7 @@ import type { BudgetWithCreatedAt, Tx } from '../types/common';
 export function renderMainPage(): HTMLElement {
   const state = appStore.getState();
   const wrapper = document.createElement('div');
-  wrapper.className = 'min-h-screen bg-slate-50';
+  wrapper.className = 'min-h-screen bg-slate-50 overflow-x-hidden';
 
   const budget = state.budget as BudgetWithCreatedAt | null;
   if (!budget) {
@@ -57,67 +57,58 @@ export function renderMainPage(): HTMLElement {
   const todayTone = leftToday >= 0 ? 'text-emerald-500' : 'text-red-600';
 
   wrapper.innerHTML = `
-    <div class="min-[704px]:hidden min-h-screen bg-white px-4 py-8">
+    <!-- MOBILE (base) -->
+    <div class="page-mobile">
       <div class="pb-32">
-        <div class="flex items-center justify-between gap-3">
-          <div class="font-inter text-[16px] font-normal leading-[1.5] text-slate-500">
+        <div class="flex flex-wrap items-center justify-between gap-3 min-w-0">
+          <div class="min-w-0   text-[16px] font-normal leading-[1.5] text-slate-500 [overflow-wrap:anywhere]">
             Общий баланс
           </div>
-          <div class="shrink-0 font-inter text-[16px] font-normal leading-[1.5] text-blue-500">
+          <div class="shrink-0   text-[16px] font-normal leading-[1.5] text-blue-500">
             ${formatMoney(planned)} в день
           </div>
         </div>
 
-        <div class="mt-3 flex items-baseline gap-2 min-w-0">
-          <div class="min-w-0 break-words font-inter text-[24px] font-semibold leading-[1.2] text-slate-900">
+        <div class="mt-3 flex flex-wrap items-baseline gap-2 min-w-0">
+          <div class="min-w-0 break-all   text-[24px] font-semibold leading-[1.2] text-slate-900">
             ${formatMoney(total)}
           </div>
-          <div class="shrink-0 font-inter text-[16px] font-normal leading-[1.5] text-slate-500">
+          <div class="shrink-0   text-[16px] font-normal leading-[1.5] text-slate-500">
             на ${daysLeft} ${pluralDaysRu(daysLeft)}
           </div>
         </div>
 
         <div class="mt-6 grid grid-cols-2 gap-4">
-          <button
-            id="editBudgetMobile"
-            type="button"
-            class="h-12 w-full rounded border border-blue-500 bg-white px-4 font-inter text-[16px] font-medium leading-[1.5] text-blue-500 transition-colors duration-150 hover:bg-blue-500/10"
-          >
+          <button id="editBudgetMobile" type="button" class="btn-outline">
             Изменить
           </button>
 
-          <button
-            id="toHistoryMobile"
-            type="button"
-            class="h-12 w-full rounded border border-blue-500 bg-white px-4 font-inter text-[16px] font-medium leading-[1.5] text-blue-500 transition-colors duration-150 hover:bg-blue-500/10"
-          >
+          <button id="toHistoryMobile" type="button" class="btn-outline">
             История расходов
           </button>
         </div>
 
         <div class="mt-10">
-          <div class="font-inter text-[16px] font-medium leading-[1.5] text-slate-500">
+          <div class="  text-[16px] font-medium leading-[1.5] text-slate-500">
             На сегодня доступно
           </div>
 
-          <div class="mt-2 flex items-baseline gap-1 min-w-0">
-            <div class="min-w-0 break-words font-inter text-[32px] font-bold leading-[1.2] ${todayTone}">
+          <div class="mt-2 flex flex-wrap items-baseline gap-1 min-w-0">
+            <div class="min-w-0 break-all   text-[32px] font-bold leading-[1.2] ${todayTone}">
               ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(leftToday)} ₽
             </div>
-            <div class="shrink-0 font-inter text-[32px] font-bold leading-[1.2] text-slate-500">/</div>
-            <div class="shrink-0 font-inter text-[32px] font-bold leading-[1.2] text-slate-500">
+            <div class="shrink-0   text-[32px] font-bold leading-[1.2] text-slate-500">/</div>
+            <div class="min-w-0 break-all   text-[32px] font-bold leading-[1.2] text-slate-500">
               ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(planned)}
             </div>
           </div>
 
-          <div class="mt-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-900">
+          <div class="mt-3   text-[12px] font-normal leading-[1.4] text-slate-900">
             ${cheerText}
           </div>
 
           <form id="txFormMobile" class="mt-6 flex flex-col gap-1">
-            <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-              Введите трату
-            </div>
+            <div class="label">Введите трату</div>
 
             <input
               id="amountMobile"
@@ -125,7 +116,7 @@ export function renderMainPage(): HTMLElement {
               type="text"
               inputmode="numeric"
               placeholder="0 ₽"
-              class="h-12 w-full rounded-lg border-2 border-blue-500 bg-white px-3 font-inter text-[16px] font-normal leading-[1.5] text-slate-900 outline-none"
+              class="input-accent"
             />
 
             <p id="txErrorMobile" class="hidden text-sm text-red-600"></p>
@@ -133,153 +124,137 @@ export function renderMainPage(): HTMLElement {
         </div>
       </div>
 
-      <div class="fixed inset-x-0 bottom-0 bg-white px-4 pb-8 pt-4">
+      <div class="bottom-bar">
         <button
           type="submit"
           form="txFormMobile"
           id="saveTxBtnMobile"
-          class="hidden h-12 w-full rounded bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
+          class="hidden btn-primary"
         >
           Сохранить
         </button>
       </div>
     </div>
 
-    <div class="hidden min-[704px]:block">
-      <div class="min-h-screen bg-slate-50 px-4 pt-16 pb-6 flex flex-col items-center min-[704px]:pt-0 min-[704px]:pb-0 min-[704px]:justify-center min-[1140px]:pt-16 min-[1140px]:pb-6 min-[1140px]:justify-start">
-        <div class="w-full flex flex-col gap-2 min-[704px]:w-[524px] min-[1140px]:w-[558px]">
-          <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
-            <div class="flex flex-col gap-3">
-              <div class="flex items-center gap-2 min-w-0">
-                <div class="flex-1 min-w-0 text-[18px] font-[600] leading-[1.3] text-slate-500">
-                  Общий баланс
-                </div>
-
-                <div class="shrink-0 text-[16px] font-normal leading-[1.5] text-blue-500">
-                  ${formatMoney(planned)} в день
-                </div>
+    <!-- DESKTOP (enhancement) -->
+    <div class="page-desktop-shell">
+      <div class="container-narrow">
+        <section class="card">
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-wrap items-center gap-2 min-w-0">
+              <div class="flex-1 min-w-0   text-[18px] font-[600] leading-[1.3] text-slate-500 [overflow-wrap:anywhere]">
+                Общий баланс
               </div>
 
-              <div class="flex items-baseline gap-2 min-w-0">
-                <div class="min-w-0 break-words text-[32px] font-bold leading-[1.2] text-slate-900">
-                  ${formatMoney(total)}
-                </div>
-                <div class="shrink-0 text-[16px] font-normal leading-[1.5] text-slate-500">
-                  на ${daysLeft} ${pluralDaysRu(daysLeft)}
-                </div>
+              <div class="shrink-0   text-[16px] font-normal leading-[1.5] text-blue-500">
+                ${formatMoney(planned)} в день
               </div>
-
-              <button
-                id="editBudget"
-                type="button"
-                class="h-12 w-full rounded-[4px] border border-blue-500 bg-white px-4 text-[16px] font-medium leading-[1.5] text-blue-500 hover:bg-blue-500/10"
-              >
-                Изменить
-              </button>
             </div>
-          </section>
 
-          <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
-            <div class="flex flex-col gap-3">
-              <div class="flex flex-col gap-0.5">
-                <div class="text-[18px] font-semibold leading-[1.3] text-slate-500">
-                  На сегодня доступно
-                </div>
-
-                <div class="flex items-baseline gap-2 min-w-0">
-                  <div class="min-w-0 break-words text-[32px] font-bold leading-[1.2] ${todayTone}">
-                    ${formatMoney(leftToday)}
-                  </div>
-                  <div class="shrink-0 text-[32px] font-bold leading-[1.2] text-slate-500">/</div>
-                  <div class="shrink-0 text-[32px] font-bold leading-[1.2] text-slate-500">
-                    ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(planned)}
-                  </div>
-                </div>
+            <div class="flex flex-wrap items-baseline gap-2 min-w-0">
+              <div class="min-w-0 break-all   text-[32px] font-bold leading-[1.2] text-slate-900">
+                ${formatMoney(total)}
               </div>
-
-              <div class="text-[12px] font-normal leading-[1.4] text-slate-900">
-                ${cheerText}
+              <div class="shrink-0   text-[16px] font-normal leading-[1.5] text-slate-500">
+                на ${daysLeft} ${pluralDaysRu(daysLeft)}
               </div>
-
-              <form id="txForm" class="flex flex-col gap-3">
-                <div class="flex flex-col gap-1">
-                  <div class="ml-3 text-[12px] font-normal leading-[1.4] text-slate-500">
-                    Введите трату
-                  </div>
-
-                  <input
-                    id="amount"
-                    name="amount"
-                    type="text"
-                    inputmode="numeric"
-                    placeholder="0 ₽"
-                    class="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 text-[16px] font-normal leading-[1.5] text-slate-900 outline-none focus:border-2 focus:border-blue-500"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  class="h-12 w-full rounded-[4px] bg-blue-500 px-4 text-[16px] font-medium leading-[1.5] text-white hover:bg-blue-500/85"
-                >
-                  Сохранить
-                </button>
-
-                <p id="txError" class="hidden text-sm text-red-600"></p>
-              </form>
             </div>
-          </section>
 
-          <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
-            <div class="flex flex-col gap-6">
+            <button id="editBudget" type="button" class="btn-outline">
+              Изменить
+            </button>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-0.5">
+              <div class="  text-[18px] font-semibold leading-[1.3] text-slate-500">
+                На сегодня доступно
+              </div>
+
+              <div class="flex flex-wrap items-baseline gap-2 min-w-0">
+                <div class="min-w-0 break-all   text-[32px] font-bold leading-[1.2] ${todayTone}">
+                  ${formatMoney(leftToday)}
+                </div>
+                <div class="shrink-0   text-[32px] font-bold leading-[1.2] text-slate-500">/</div>
+                <div class="min-w-0 break-all   text-[32px] font-bold leading-[1.2] text-slate-500">
+                  ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(planned)}
+                </div>
+              </div>
+            </div>
+
+            <div class="  text-[12px] font-normal leading-[1.4] text-slate-900">
+              ${cheerText}
+            </div>
+
+            <form id="txForm" class="flex flex-col gap-3">
               <div class="flex flex-col gap-1">
-                <div class="text-[24px] font-semibold leading-[1.2] text-slate-500">
-                  История расходов
-                </div>
-                <div class="text-[12px] font-normal leading-[1.4] text-blue-500">
-                  Средние траты в день: ${formatMoney(avgSpent)}
-                </div>
+                <div class="label">Введите трату</div>
+
+                <input
+                  id="amount"
+                  name="amount"
+                  type="text"
+                  inputmode="numeric"
+                  placeholder="0 ₽"
+                  class="input-base"
+                />
               </div>
 
-              <div class="flex flex-col">
-                ${
-                  lastExpenses.length
-                    ? lastExpenses
-                        .map((t, idx) => {
-                          const divider =
-                            idx === lastExpenses.length - 1
-                              ? ''
-                              : `<div class="my-1.5 h-px w-full bg-slate-500"></div>`;
-
-                          return `
-                            <div class="flex items-baseline gap-3 min-w-0">
-                              <div class="flex-1 min-w-0 break-words text-[18px] leading-[1.3] text-slate-900">
-                               <span class="font-semibold">
-                                 ${new Intl.NumberFormat('ru-RU').format(t.amount)}
-                               </span>
-                               <span class="font-normal"> ₽</span>
-                             </div>
-                              <div class="shrink-0 text-[16px] font-normal leading-[1.5] text-slate-500">
-                                ${formatRuDayMonth(t.date)}
-                              </div>
-                            </div>
-                            ${divider}
-                          `;
-                        })
-                        .join('')
-                    : `<div class="text-[16px] font-normal leading-[1.5] text-slate-500">Пока нет расходов.</div>`
-                }
-              </div>
-
-              <button
-                id="toHistory"
-                type="button"
-                class="h-12 w-full rounded-[4px] border border-blue-500 bg-white px-4 text-[16px] font-medium leading-[1.5] text-blue-500 hover:bg-blue-500/10"
-              >
-                Смотреть всю историю
+              <button type="submit" class="btn-primary-desktop">
+                Сохранить
               </button>
+
+              <p id="txError" class="hidden text-sm text-red-600"></p>
+            </form>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="flex flex-col gap-6">
+            <div class="flex flex-col gap-1">
+              <div class="  text-[24px] font-semibold leading-[1.2] text-slate-500">
+                История расходов
+              </div>
+              <div class="  text-[12px] font-normal leading-[1.4] text-blue-500">
+                Средние траты в день: ${formatMoney(avgSpent)}
+              </div>
             </div>
-          </section>
-        </div>
+
+            <div class="flex flex-col min-w-0">
+              ${
+                lastExpenses.length
+                  ? lastExpenses
+                      .map((t, idx) => {
+                        const divider =
+                          idx === lastExpenses.length - 1 ? '' : `<div class="divider-line"></div>`;
+
+                        return `
+                          <div class="flex flex-wrap items-baseline gap-3 min-w-0">
+                            <div class="flex-1 min-w-0 break-all   text-[18px] leading-[1.3] text-slate-900">
+                              <span class="font-semibold">
+                                ${new Intl.NumberFormat('ru-RU').format(t.amount)}
+                              </span>
+                              <span class="font-normal"> ₽</span>
+                            </div>
+                            <div class="shrink-0   text-[16px] font-normal leading-[1.5] text-slate-500">
+                              ${formatRuDayMonth(t.date)}
+                            </div>
+                          </div>
+                          ${divider}
+                        `;
+                      })
+                      .join('')
+                  : `<div class="  text-[16px] font-normal leading-[1.5] text-slate-500">Пока нет расходов.</div>`
+              }
+            </div>
+
+            <button id="toHistory" type="button" class="btn-outline">
+              Смотреть всю историю
+            </button>
+          </div>
+        </section>
       </div>
     </div>
   `;

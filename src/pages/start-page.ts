@@ -47,6 +47,7 @@ function attachPlusMoneyInput(input: HTMLInputElement): void {
 export function renderStartPage(): HTMLElement {
   const state = appStore.getState();
   const wrapper = document.createElement('div');
+  wrapper.className = 'overflow-x-hidden';
 
   const todayISO = formatISODate(new Date());
   const budget = state.budget;
@@ -59,22 +60,21 @@ export function renderStartPage(): HTMLElement {
     const daysLeft = remainingDays(budget, todayISO);
 
     wrapper.innerHTML = `
-      <div class="min-[704px]:hidden min-h-screen bg-white px-4 py-8">
+      <!-- MOBILE (base) -->
+      <div class="page-mobile">
         <div class="pb-28">
-          <div class="flex items-baseline justify-between gap-3">
-            <div class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
+          <div class="flex flex-wrap items-baseline gap-3 min-w-0">
+            <div class="min-w-0   text-[24px] sm:text-[32px] font-bold leading-[1.2] text-slate-900 [overflow-wrap:anywhere]">
               Общий баланс
             </div>
-            <div class="font-inter text-[18px] font-normal leading-[1.3] text-blue-500">
+            <div class="shrink-0   text-[14px] sm:text-[18px] font-normal leading-[1.3] text-blue-500">
               ${formatMoney(daily)} в день
             </div>
           </div>
 
           <form id="editBudgetFormMobile" class="mt-6 flex w-full flex-col gap-4">
             <div class="flex flex-col gap-1">
-              <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-                Ваш баланс
-              </div>
+              <div class="label">Ваш баланс</div>
               ${InputField({
                 id: 'currentBalanceMobile',
                 type: 'text',
@@ -84,23 +84,19 @@ export function renderStartPage(): HTMLElement {
             </div>
 
             <div class="flex flex-col gap-1">
-              <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-                Пополнить
-              </div>
+              <div class="label">Пополнить</div>
               <input
                 id="topUpMobile"
                 name="topUpMobile"
                 type="text"
                 inputmode="numeric"
                 placeholder="+0 ₽"
-                class="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 font-inter text-[16px] font-normal leading-[1.5] text-slate-900 outline-none focus:border-2 focus:border-blue-500"
+                class="input-base"
               />
             </div>
 
             <div class="flex flex-col gap-1">
-              <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-                На срок
-              </div>
+              <div class="label">На срок</div>
               ${PeriodSelect({ id: 'endDateMobileEdit', minDateISO: todayISO })}
             </div>
 
@@ -108,19 +104,15 @@ export function renderStartPage(): HTMLElement {
           </form>
         </div>
 
-        <div class="fixed inset-x-0 bottom-0 bg-white px-4 pb-8 pt-4">
-          <button
-            type="button"
-            id="backBtnMobile"
-            class="h-12 w-full rounded border border-blue-500 bg-white px-4 font-inter text-[16px] font-medium leading-[1.5] text-blue-500 transition-colors duration-150 hover:bg-blue-500/10"
-          >
+        <div class="bottom-bar">
+          <button type="button" id="backBtnMobile" class="btn-outline">
             Вернуться
           </button>
 
           <button
             type="button"
             id="cancelBtnMobile"
-            class="hidden mt-3 h-12 w-full rounded border border-blue-500 bg-white px-4 font-inter text-[16px] font-medium leading-[1.5] text-blue-500 transition-colors duration-150 hover:bg-blue-500/10"
+            class="hidden mt-3 btn-outline"
           >
             Вернуться без сохранения
           </button>
@@ -129,34 +121,35 @@ export function renderStartPage(): HTMLElement {
             type="submit"
             form="editBudgetFormMobile"
             id="saveBtnMobile"
-            class="hidden mt-3 h-12 w-full rounded bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
+            class="hidden mt-3 btn-primary"
           >
             Сохранить
           </button>
         </div>
       </div>
 
-      <div class="hidden min-[704px]:flex min-h-screen bg-slate-50 px-4 pt-16 pb-6 flex-col items-center min-[704px]:pt-0 min-[704px]:pb-0 min-[704px]:justify-center min-[1140px]:pt-16 min-[1140px]:pb-6 min-[1140px]:justify-start">
-        <div class="w-full flex flex-col gap-2 min-[704px]:w-[524px] min-[1140px]:w-[558px]">
-          <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
+      <!-- DESKTOP (enhancement) -->
+      <div class="page-desktop-shell">
+        <div class="container-narrow">
+          <section class="card">
             <div class="flex flex-col gap-6">
-              <div class="flex flex-col gap-3">
-                <div class="flex items-baseline gap-2">
-                  <div class="flex-1 font-inter text-[24px] font-semibold leading-[1.2] text-slate-500">
+              <div class="flex flex-col gap-3 min-w-0">
+                <div class="flex flex-wrap items-baseline gap-2 min-w-0">
+                  <div class="min-w-0 flex-1 h2-title [overflow-wrap:anywhere]">
                     Общий баланс
                   </div>
 
-                  <div class="font-inter text-[16px] font-normal leading-[1.5] text-blue-500">
+                  <div class="shrink-0   text-[16px] font-normal leading-[1.5] text-blue-500">
                     ${formatMoney(daily)} в день
                   </div>
                 </div>
 
-                <div class="flex items-baseline gap-2">
-                  <div class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
+                <div class="flex flex-wrap items-baseline gap-2 min-w-0">
+                  <div class="min-w-0   text-[32px] font-bold leading-[1.2] text-slate-900 break-all">
                     ${formatMoney(total)}
                   </div>
 
-                  <div class="font-inter text-[16px] font-normal leading-[1.5] text-slate-500">
+                  <div class="shrink-0   text-[16px] font-normal leading-[1.5] text-slate-500">
                     на ${daysLeft} ${pluralDaysRu(daysLeft)}
                   </div>
                 </div>
@@ -164,34 +157,25 @@ export function renderStartPage(): HTMLElement {
 
               <form id="editBudgetForm" class="flex w-full flex-col gap-4">
                 <div class="flex flex-col gap-1">
-                  <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-                    Пополнить
-                  </div>
-
+                  <div class="label">Пополнить</div>
                   <input
                     id="topUp"
                     name="topUp"
                     type="text"
                     inputmode="numeric"
                     placeholder="+0 ₽"
-                    class="h-12 w-full rounded-lg border border-slate-200 bg-white px-3 font-inter text-[16px] font-normal leading-[1.5] text-slate-900 outline-none focus:border-2 focus:border-blue-500"
+                    class="input-base"
                   />
                 </div>
 
                 <div class="flex flex-col gap-1">
-                  <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-                    На срок
-                  </div>
+                  <div class="label">На срок</div>
                   ${PeriodSelect({ id: 'endDate', minDateISO: todayISO })}
                 </div>
 
                 <p id="editFormError" class="hidden text-sm text-red-600"></p>
 
-                <button
-                  type="submit"
-                  id="saveEditBtn"
-                  class="h-12 w-full rounded-[4px] bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
-                >
+                <button type="submit" id="saveEditBtn" class="btn-primary-desktop">
                   Сохранить
                 </button>
               </form>
@@ -292,7 +276,6 @@ export function renderStartPage(): HTMLElement {
 
       balanceEl.addEventListener('input', syncButtons);
       topUpEl.addEventListener('input', syncButtons);
-
       endDateEl.addEventListener('input', syncButtons);
       endDateEl.addEventListener('change', syncButtons);
 
@@ -303,17 +286,14 @@ export function renderStartPage(): HTMLElement {
   }
 
   wrapper.innerHTML = `
-    <div class="min-[704px]:hidden min-h-screen bg-white px-4 py-8">
+    <!-- MOBILE (base) -->
+    <div class="page-mobile">
       <div class="pb-28">
-        <h1 class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
-          Начнём!
-        </h1>
+        <h1 class="h1-title">Начнём!</h1>
 
         <form id="budgetFormMobile" class="mt-6 flex w-full flex-col gap-4">
           <div class="flex flex-col gap-1">
-            <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-              Укажите баланс
-            </div>
+            <div class="label">Укажите баланс</div>
             ${InputField({
               id: 'initialBalanceMobile',
               type: 'text',
@@ -323,9 +303,7 @@ export function renderStartPage(): HTMLElement {
           </div>
 
           <div class="flex flex-col gap-1">
-            <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-              На срок
-            </div>
+            <div class="label">На срок</div>
             ${PeriodSelect({ id: 'endDateMobile', minDateISO: todayISO })}
           </div>
 
@@ -333,54 +311,47 @@ export function renderStartPage(): HTMLElement {
         </form>
       </div>
 
-      <div class="fixed inset-x-0 bottom-0 bg-white px-4 pb-8 pt-4">
+      <div class="bottom-bar">
         <button
           type="submit"
           form="budgetFormMobile"
           id="calculateBtnMobile"
-          class="hidden h-12 w-full rounded bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
+          class="hidden btn-primary"
         >
           Рассчитать
         </button>
       </div>
     </div>
 
-    <div class="hidden min-[704px]:flex min-h-screen w-full flex-col items-center justify-center bg-slate-50 px-4 pb-16">
-      <div class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-md min-[704px]:w-[524px] min-[1140px]:w-[558px]">
-        <h1 class="font-inter text-[32px] font-bold leading-[1.2] text-slate-900">
-          Начнём!
-        </h1>
+    <!-- DESKTOP (enhancement) -->
+    <div class="page-desktop-shell">
+      <div class="container-narrow">
+        <section class="card shadow-md">
+          <h1 class="h1-title">Начнём!</h1>
 
-        <form id="budgetForm" class="mt-6 flex w-full flex-col gap-4">
-          <div class="flex flex-col gap-1">
-            <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-              Укажите баланс
+          <form id="budgetForm" class="mt-6 flex w-full flex-col gap-4">
+            <div class="flex flex-col gap-1">
+              <div class="label">Укажите баланс</div>
+              ${InputField({
+                id: 'initialBalance',
+                type: 'text',
+                inputmode: 'numeric',
+                placeholder: 'Стартовый баланс',
+              })}
             </div>
-            ${InputField({
-              id: 'initialBalance',
-              type: 'text',
-              inputmode: 'numeric',
-              placeholder: 'Стартовый баланс',
-            })}
-          </div>
 
-          <div class="flex flex-col gap-1">
-            <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
-              На срок
+            <div class="flex flex-col gap-1">
+              <div class="label">На срок</div>
+              ${PeriodSelect({ id: 'endDate', minDateISO: todayISO })}
             </div>
-            ${PeriodSelect({ id: 'endDate', minDateISO: todayISO })}
-          </div>
 
-          <p id="formError" class="hidden text-sm text-red-600"></p>
+            <p id="formError" class="hidden text-sm text-red-600"></p>
 
-          <button
-            type="submit"
-            id="calculateBtn"
-            class="h-12 w-full rounded bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
-          >
-            Рассчитать
-          </button>
-        </form>
+            <button type="submit" id="calculateBtn" class="btn-primary">
+              Рассчитать
+            </button>
+          </form>
+        </section>
       </div>
     </div>
   `;

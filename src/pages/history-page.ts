@@ -7,7 +7,7 @@ import type { Transaction } from '../models/schemas';
 export function renderHistoryPage(): HTMLElement {
   const state = appStore.getState();
   const wrapper = document.createElement('div');
-  wrapper.className = 'min-h-screen bg-slate-50';
+  wrapper.className = 'min-h-screen bg-slate-50 overflow-x-hidden';
 
   const budget = state.budget;
   if (!budget) {
@@ -31,9 +31,9 @@ export function renderHistoryPage(): HTMLElement {
   const renderExpensesList = (
     expenses: Array<Transaction & { amount: number }>,
     mobile: boolean
-  ) => {
+  ): string => {
     if (!expenses.length) {
-      return `<div class="${mobile ? 'mt-4' : ''} text-[16px] font-normal leading-[1.5] text-slate-500 font-inter">Пока нет расходов.</div>`;
+      return `<div class="${mobile ? 'mt-4 ' : ''}history-empty">Пока нет расходов.</div>`;
     }
 
     return expenses
@@ -41,29 +41,32 @@ export function renderHistoryPage(): HTMLElement {
         const divider =
           idx === expenses.length - 1
             ? ''
-            : `<div class="h-px w-full ${mobile ? 'bg-slate-200' : 'bg-slate-500'}"></div>`;
+            : `<div class="${mobile ? 'history-divider-mobile' : 'history-divider-desktop'}"></div>`;
 
         const deleteBtn =
           typeof t.id === 'number'
             ? `
-            <button
-              type="button"
-              class="ml-1 inline-flex ${mobile ? 'h-8 w-8' : 'h-6 w-6'} items-center justify-center text-slate-500 hover:text-slate-700"
-              aria-label="Удалить"
-              data-del-id="${String(t.id)}"
-            >
-              ${renderDeleteIcon()}
-            </button>
-          `
+              <button
+                type="button"
+                class="${mobile ? 'icon-btn-mobile' : 'icon-btn-desktop'}"
+                aria-label="Удалить"
+                data-del-id="${String(t.id)}"
+              >
+                ${renderDeleteIcon()}
+              </button>
+            `
             : '';
 
+        const amountWeight = mobile ? 'history-amount-mobile' : 'history-amount-desktop';
+        const rowPad = mobile ? 'history-row-mobile' : '';
+
         return `
-          <div class="${mobile ? 'py-2' : ''} flex items-baseline gap-3">
-            <div class="flex-1 text-[18px] ${mobile ? 'font-normal' : 'font-semibold'} leading-[1.3] text-slate-900 font-inter">
+          <div class="history-row ${rowPad}">
+            <div class="history-amount ${amountWeight}">
               ${formatMoney(t.amount)}
             </div>
 
-            <div class="text-[16px] font-normal leading-[1.5] text-slate-500 font-inter">
+            <div class="history-date">
               ${formatRuDayMonth(t.date)}
             </div>
 
@@ -82,27 +85,29 @@ export function renderHistoryPage(): HTMLElement {
     const hasChanges = deletedIds.size > 0;
 
     wrapper.innerHTML = `
-      <div class="min-[704px]:hidden min-h-screen bg-white px-4 py-8">
+      <!-- MOBILE (base) -->
+      <div class="page-mobile">
         <div class="pb-32">
-          <div class="flex flex-col gap-1">
-            <div class="text-[24px] font-bold leading-[1.2] text-slate-900 font-inter">
+          <div class="flex flex-col gap-1 min-w-0">
+            <div class="min-w-0 break-words history-title">
               История расходов
             </div>
-            <div id="avgMobile" class="text-[12px] font-normal leading-[1.4] text-blue-500 font-inter">
+
+            <div id="avgMobile" class="min-w-0 break-all history-avg">
               Средние траты в день: ${formatMoney(avgSpent)}
             </div>
           </div>
 
-          <div id="historyListMobile" class="mt-6 flex flex-col gap-2">
+          <div id="historyListMobile" class="mt-6 flex flex-col gap-2 min-w-0">
             ${renderExpensesList(visibleExpenses, true)}
           </div>
         </div>
 
-        <div class="fixed inset-x-0 bottom-0 bg-white px-4 pb-8 pt-4">
+        <div class="bottom-bar">
           <button
             id="backBtnMobile"
             type="button"
-            class="${hasChanges ? 'hidden' : ''} h-12 w-full rounded border border-blue-500 bg-white px-4 font-inter text-[16px] font-medium leading-[1.5] text-blue-500 transition-colors duration-150 hover:bg-blue-500/10"
+            class="${hasChanges ? 'hidden ' : ''}btn-outline"
           >
             Вернуться
           </button>
@@ -110,7 +115,7 @@ export function renderHistoryPage(): HTMLElement {
           <button
             id="cancelBtnMobile"
             type="button"
-            class="${hasChanges ? '' : 'hidden'} h-12 w-full rounded border border-blue-500 bg-white px-4 font-inter text-[16px] font-medium leading-[1.5] text-blue-500 transition-colors duration-150 hover:bg-blue-500/10"
+            class="${hasChanges ? '' : 'hidden '}btn-outline"
           >
             Вернуться без сохранения
           </button>
@@ -118,58 +123,43 @@ export function renderHistoryPage(): HTMLElement {
           <button
             id="saveBtnMobile"
             type="button"
-            class="${hasChanges ? '' : 'hidden'} mt-3 h-12 w-full rounded bg-blue-500 px-4 font-inter text-[16px] font-medium leading-[1.5] text-white transition-colors duration-150 hover:bg-blue-500/85"
+            class="${hasChanges ? '' : 'hidden '}mt-3 btn-primary"
           >
             Сохранить
           </button>
         </div>
       </div>
 
-      <div
-        class="hidden min-[704px]:flex min-h-screen bg-slate-50 px-4 pt-16 pb-6 flex-col items-center
-               min-[704px]:pt-0 min-[704px]:pb-0 min-[704px]:justify-center
-               min-[1140px]:pt-16 min-[1140px]:pb-6 min-[1140px]:justify-start"
-      >
-        <div class="w-full flex flex-col min-[704px]:w-[524px] min-[1140px]:w-[558px]">
-          <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
-            <div class="flex flex-col gap-6">
-              <div class="flex flex-col gap-1">
-                <div class="text-[24px] font-semibold leading-[1.2] text-slate-900 font-inter">
+      <!-- DESKTOP (enhancement) -->
+      <div class="page-desktop-shell">
+        <div class="container-narrow">
+          <section class="card">
+            <div class="flex flex-col gap-6 min-w-0">
+              <div class="flex flex-col gap-1 min-w-0">
+                <div class="min-w-0 break-words history-title-desktop">
                   История расходов
                 </div>
-                <div id="avgDesktop" class="text-[12px] font-normal leading-[1.4] text-blue-500 font-inter">
+                <div id="avgDesktop" class="min-w-0 break-all history-avg">
                   Средние траты в день: ${formatMoney(avgSpent)}
                 </div>
               </div>
 
-              <div id="historyListDesktop" class="flex flex-col gap-2">
+              <div id="historyListDesktop" class="flex flex-col gap-2 min-w-0">
                 ${renderExpensesList(visibleExpenses, false)}
               </div>
 
               ${
                 hasChanges
                   ? `
-                    <button
-                      id="cancelBtnDesktop"
-                      type="button"
-                      class="h-12 w-full rounded-[4px] border border-blue-500 bg-white px-4 text-[16px] font-medium leading-[1.5] text-blue-500 hover:bg-blue-500/10 font-inter"
-                    >
+                    <button id="cancelBtnDesktop" type="button" class="btn-outline">
                       Вернуться без сохранения
                     </button>
-                    <button
-                      id="saveBtnDesktop"
-                      type="button"
-                      class="h-12 w-full rounded-[4px] bg-blue-500 px-4 text-[16px] font-medium leading-[1.5] text-white hover:bg-blue-500/85 font-inter"
-                    >
+                    <button id="saveBtnDesktop" type="button" class="btn-primary-desktop">
                       Сохранить
                     </button>
                   `
                   : `
-                    <button
-                      id="backBtnDesktop"
-                      type="button"
-                      class="h-12 w-full rounded-[4px] border border-blue-500 bg-white px-4 text-[16px] font-medium leading-[1.5] text-blue-500 hover:bg-blue-500/10 font-inter"
-                    >
+                    <button id="backBtnDesktop" type="button" class="btn-outline">
                       Вернуться
                     </button>
                   `
