@@ -3,33 +3,9 @@ import { initPeriodSelect, PeriodSelect } from '../components/period-select';
 import { plannedDailyBudget, remainingDays, totalBalance } from '../services/budget-calculator';
 import { formatISODate } from '../utils/dates';
 import { saveBudget } from '../utils/db';
+import { formatMoney, pluralDaysRu, parseRubDigitsToNumber } from '../utils/format';
 import { appStore } from '../utils/state';
 import { attachMoneyInput, formatRubles, parseBudgetForm } from '../utils/validation';
-
-function formatMoney(n: number): string {
-  return `${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(n)} ₽`;
-}
-
-function pluralDaysRu(n: number): string {
-  const pr = new Intl.PluralRules('ru-RU');
-  const form = pr.select(n);
-
-  if (form === 'one') {
-    return 'день';
-  }
-  if (form === 'few') {
-    return 'дня';
-  }
-  return 'дней';
-}
-
-function parseRublesLocal(raw: string): number {
-  const digits = raw.replace(/[^\d]/g, '');
-  if (!digits) {
-    return 0;
-  }
-  return Number(digits);
-}
 
 function attachPlusMoneyInput(input: HTMLInputElement): void {
   const basePlaceholder = '+0 ₽';
@@ -72,7 +48,7 @@ export function renderStartPage(): HTMLElement {
   const state = appStore.getState();
   const wrapper = document.createElement('div');
 
-  const today = formatISODate(new Date());
+  const todayISO = formatISODate(new Date());
   const budget = state.budget;
 
   if (budget) {
@@ -80,7 +56,7 @@ export function renderStartPage(): HTMLElement {
 
     const total = totalBalance(budget, txs);
     const daily = plannedDailyBudget(budget);
-    const daysLeft = remainingDays(budget, today);
+    const daysLeft = remainingDays(budget, todayISO);
 
     wrapper.innerHTML = `
       <div class="min-[704px]:hidden min-h-screen bg-white px-4 py-8">
@@ -125,7 +101,7 @@ export function renderStartPage(): HTMLElement {
               <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
                 На срок
               </div>
-              ${PeriodSelect({ id: 'endDateMobileEdit', minDateISO: today })}
+              ${PeriodSelect({ id: 'endDateMobileEdit', minDateISO: todayISO })}
             </div>
 
             <p id="editFormErrorMobile" class="hidden text-sm text-red-600"></p>
@@ -206,7 +182,7 @@ export function renderStartPage(): HTMLElement {
                   <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
                     На срок
                   </div>
-                  ${PeriodSelect({ id: 'endDate', minDateISO: today })}
+                  ${PeriodSelect({ id: 'endDate', minDateISO: todayISO })}
                 </div>
 
                 <p id="editFormError" class="hidden text-sm text-red-600"></p>
@@ -229,13 +205,13 @@ export function renderStartPage(): HTMLElement {
     if (endDesktop) {
       endDesktop.value = budget.endDate;
     }
-    initPeriodSelect(wrapper, { id: 'endDate', minDateISO: today });
+    initPeriodSelect(wrapper, { id: 'endDate', minDateISO: todayISO });
 
     const endMobile = wrapper.querySelector<HTMLInputElement>('#endDateMobileEdit');
     if (endMobile) {
       endMobile.value = budget.endDate;
     }
-    initPeriodSelect(wrapper, { id: 'endDateMobileEdit', minDateISO: today });
+    initPeriodSelect(wrapper, { id: 'endDateMobileEdit', minDateISO: todayISO });
 
     const topUpInput = wrapper.querySelector<HTMLInputElement>('#topUp');
     if (topUpInput) {
@@ -288,15 +264,15 @@ export function renderStartPage(): HTMLElement {
 
     if (backBtnMobile && cancelBtnMobile && saveBtnMobile && balanceEl && topUpEl && endDateEl) {
       const initial = {
-        balance: parseRublesLocal(balanceEl.value),
-        topUp: parseRublesLocal(topUpEl.value),
+        balance: parseRubDigitsToNumber(balanceEl.value),
+        topUp: parseRubDigitsToNumber(topUpEl.value),
         endDate: (endDateEl.value ?? '').trim(),
       };
 
       const hasChanges = () => {
         const now = {
-          balance: parseRublesLocal(balanceEl.value),
-          topUp: parseRublesLocal(topUpEl.value),
+          balance: parseRubDigitsToNumber(balanceEl.value),
+          topUp: parseRubDigitsToNumber(topUpEl.value),
           endDate: (endDateEl.value ?? '').trim(),
         };
 
@@ -350,7 +326,7 @@ export function renderStartPage(): HTMLElement {
             <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
               На срок
             </div>
-            ${PeriodSelect({ id: 'endDateMobile', minDateISO: today })}
+            ${PeriodSelect({ id: 'endDateMobile', minDateISO: todayISO })}
           </div>
 
           <p id="formErrorMobile" class="hidden text-sm text-red-600"></p>
@@ -392,7 +368,7 @@ export function renderStartPage(): HTMLElement {
             <div class="ml-3 font-inter text-[12px] font-normal leading-[1.4] text-slate-500">
               На срок
             </div>
-            ${PeriodSelect({ id: 'endDate', minDateISO: today })}
+            ${PeriodSelect({ id: 'endDate', minDateISO: todayISO })}
           </div>
 
           <p id="formError" class="hidden text-sm text-red-600"></p>
@@ -415,7 +391,7 @@ export function renderStartPage(): HTMLElement {
   if (form && errorEl) {
     form.addEventListener('submit', e => {
       e.preventDefault();
-      void handleCreateSubmit(wrapper, errorEl);
+      void handleCreateSubmit(wrapper, errorEl, todayISO);
     });
 
     const balanceInput = wrapper.querySelector<HTMLInputElement>('#initialBalance');
@@ -423,7 +399,7 @@ export function renderStartPage(): HTMLElement {
       attachMoneyInput(balanceInput, { emptyPlaceholder: 'Стартовый баланс' });
     }
 
-    initPeriodSelect(wrapper, { id: 'endDate', minDateISO: today });
+    initPeriodSelect(wrapper, { id: 'endDate', minDateISO: todayISO });
   }
 
   const formMobile = wrapper.querySelector<HTMLFormElement>('#budgetFormMobile');
@@ -435,7 +411,7 @@ export function renderStartPage(): HTMLElement {
   if (formMobile && errorElMobile) {
     formMobile.addEventListener('submit', e => {
       e.preventDefault();
-      void handleCreateSubmitMobile(wrapper, errorElMobile);
+      void handleCreateSubmitMobile(wrapper, errorElMobile, todayISO);
     });
   }
 
@@ -443,12 +419,11 @@ export function renderStartPage(): HTMLElement {
     attachMoneyInput(balanceInputMobile, { emptyPlaceholder: 'Стартовый баланс' });
   }
 
-  initPeriodSelect(wrapper, { id: 'endDateMobile', minDateISO: today });
+  initPeriodSelect(wrapper, { id: 'endDateMobile', minDateISO: todayISO });
 
   if (btnMobile && balanceInputMobile && endHiddenMobile) {
     const isValid = () => {
-      const digits = balanceInputMobile.value.replace(/[^\d]/g, '');
-      const amount = digits ? Number(digits) : 0;
+      const amount = parseRubDigitsToNumber(balanceInputMobile.value);
       const hasDate = Boolean(endHiddenMobile.value && endHiddenMobile.value.trim().length > 0);
       return amount > 0 && hasDate;
     };
@@ -471,7 +446,8 @@ export function renderStartPage(): HTMLElement {
 
 async function handleCreateSubmit(
   wrapper: HTMLElement,
-  errorEl: HTMLParagraphElement
+  errorEl: HTMLParagraphElement,
+  todayISO: string
 ): Promise<void> {
   errorEl.classList.add('hidden');
   errorEl.textContent = '';
@@ -479,10 +455,9 @@ async function handleCreateSubmit(
   const initialBalance = (
     wrapper.querySelector<HTMLInputElement>('#initialBalance')?.value ?? ''
   ).trim();
-  const startDate = formatISODate(new Date());
   const endDate = (wrapper.querySelector<HTMLInputElement>('#endDate')?.value ?? '').trim();
 
-  const parsed = parseBudgetForm({ initialBalance, startDate, endDate });
+  const parsed = parseBudgetForm({ initialBalance, startDate: todayISO, endDate });
 
   if (!parsed.ok) {
     errorEl.textContent = parsed.error;
@@ -501,7 +476,8 @@ async function handleCreateSubmit(
 
 async function handleCreateSubmitMobile(
   wrapper: HTMLElement,
-  errorEl: HTMLParagraphElement
+  errorEl: HTMLParagraphElement,
+  todayISO: string
 ): Promise<void> {
   errorEl.classList.add('hidden');
   errorEl.textContent = '';
@@ -509,10 +485,9 @@ async function handleCreateSubmitMobile(
   const initialBalance = (
     wrapper.querySelector<HTMLInputElement>('#initialBalanceMobile')?.value ?? ''
   ).trim();
-  const startDate = formatISODate(new Date());
   const endDate = (wrapper.querySelector<HTMLInputElement>('#endDateMobile')?.value ?? '').trim();
 
-  const parsed = parseBudgetForm({ initialBalance, startDate, endDate });
+  const parsed = parseBudgetForm({ initialBalance, startDate: todayISO, endDate });
 
   if (!parsed.ok) {
     errorEl.textContent = parsed.error;
@@ -545,7 +520,7 @@ async function handleEditSubmit(
   const topUpRaw = (wrapper.querySelector<HTMLInputElement>('#topUp')?.value ?? '').trim();
   const endDate = (wrapper.querySelector<HTMLInputElement>('#endDate')?.value ?? '').trim();
 
-  const topUp = parseRublesLocal(topUpRaw);
+  const topUp = parseRubDigitsToNumber(topUpRaw);
   const nextInitialBalance = budget.initialBalance + topUp;
 
   const parsed = parseBudgetForm({
@@ -591,8 +566,8 @@ async function handleEditSubmitMobile(
     wrapper.querySelector<HTMLInputElement>('#endDateMobileEdit')?.value ?? ''
   ).trim();
 
-  const base = parseRublesLocal(balanceRaw);
-  const topUp = parseRublesLocal(topUpRaw);
+  const base = parseRubDigitsToNumber(balanceRaw);
+  const topUp = parseRubDigitsToNumber(topUpRaw);
   const nextInitialBalance = base + topUp;
 
   const parsed = parseBudgetForm({

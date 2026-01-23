@@ -1,35 +1,8 @@
-import { format, parseISO, differenceInCalendarDays, startOfDay } from 'date-fns';
-import { ru } from 'date-fns/locale';
-
 import { deleteTransaction, getAllTransactions } from '../utils/db';
+import { averageSpentPerDay, formatMoney, formatRuDayMonth } from '../utils/format';
 import { appStore } from '../utils/state';
 
 import type { Transaction } from '../models/schemas';
-
-function formatRuDayMonth(iso: string): string {
-  const d = parseISO(iso);
-  return format(d, 'd MMMM', { locale: ru });
-}
-
-function averageSpentPerDay(budget: { startDate: string }, txs: Transaction[]): number {
-  const start = startOfDay(parseISO(budget.startDate));
-  const today = startOfDay(new Date());
-
-  const daysPassed = Math.max(1, differenceInCalendarDays(today, start) + 1);
-
-  const spent = txs
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-  if (spent === 0) {
-    return 0;
-  }
-  return spent / daysPassed;
-}
-
-function formatMoney(n: number): string {
-  return `${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(n)} ₽`;
-}
 
 export function renderHistoryPage(): HTMLElement {
   const state = appStore.getState();

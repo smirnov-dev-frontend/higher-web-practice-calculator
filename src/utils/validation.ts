@@ -3,17 +3,10 @@ import { z } from 'zod';
 import { BudgetSchema, TransactionSchema, type Budget, type Transaction } from '../models/schemas';
 
 import { formatISODate } from './dates';
+import { formatNumberRu, parseRubDigitsToNumber } from './format';
 
 export function formatRubles(value: number): string {
-  return `${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(Math.abs(value))} ₽`;
-}
-
-export function parseRubles(raw: string): number {
-  const digits = raw.replace(/[^\d]/g, '');
-  if (!digits) {
-    return 0;
-  }
-  return Number(digits);
+  return `${formatNumberRu(Math.abs(value))} ₽`;
 }
 
 export function attachMoneyInput(
@@ -33,12 +26,13 @@ export function attachMoneyInput(
   };
 
   const applyFormat = () => {
-    const digits = input.value.replace(/[^\d]/g, '');
-    if (!digits) {
+    const amount = parseRubDigitsToNumber(input.value);
+    if (!amount) {
       input.value = '';
       return;
     }
-    input.value = formatRubles(Number(digits));
+
+    input.value = formatRubles(amount);
     requestAnimationFrame(setCaretBeforeCurrency);
   };
 
@@ -62,11 +56,6 @@ function zodFirstError(err: z.ZodError): string {
   return first?.message ?? 'Ошибка валидации';
 }
 
-/**
- * Парсер бюджета.
- * - createdAt: если не передан — ставим "сегодня" (режим создания).
- * - если передан — сохраняем (режим редактирования).
- */
 export function parseBudgetForm(input: {
   initialBalance: string;
   startDate: string;
@@ -74,7 +63,7 @@ export function parseBudgetForm(input: {
   createdAt?: string;
 }): { ok: true; value: Budget } | { ok: false; error: string } {
   const candidate = {
-    initialBalance: parseRubles(input.initialBalance),
+    initialBalance: parseRubDigitsToNumber(input.initialBalance),
     startDate: input.startDate,
     endDate: input.endDate,
     createdAt: input.createdAt ?? formatISODate(new Date()),
@@ -94,7 +83,7 @@ export function parseTransactionForm(input: {
   date: string;
 }): { ok: true; value: Omit<Transaction, 'id'> } | { ok: false; error: string } {
   const candidate = {
-    amount: parseRubles(input.amount),
+    amount: parseRubDigitsToNumber(input.amount),
     type: input.type,
     date: input.date,
   };

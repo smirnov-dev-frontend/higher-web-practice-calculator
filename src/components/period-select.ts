@@ -11,6 +11,10 @@ import {
 } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
+import { parseISODate, toISODate } from '../utils/dates';
+import { pluralDaysRu } from '../utils/format';
+import { escapeHtml } from '../utils/html';
+
 interface PeriodSelectProps {
   id: string;
   minDateISO: string;
@@ -27,29 +31,9 @@ const PRESETS: Array<{ key: PresetKey; label: string }> = [
   { key: 'custom', label: 'Своя дата' },
 ];
 
-function parseISODate(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, (m ?? 1) - 1, d ?? 1);
-}
-
-function toISODate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function pluralDays(n: number): string {
-  const pr = new Intl.PluralRules('ru-RU');
-  const form = pr.select(n);
-  if (form === 'one') {
-    return 'день';
-  }
-  if (form === 'few') {
-    return 'дня';
-  }
-  return 'дней';
-}
+const WEEKDAYS_RU = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'] as const;
+const WEEKDAY_CELL_CLASS =
+  'flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500';
 
 function formatUntil(date: Date): string {
   return `до ${format(date, 'd MMMM', { locale: ru })}`;
@@ -76,26 +60,7 @@ function computeEndDate(today: Date, key: PresetKey): Date | null {
 
 function displayValue(today: Date, end: Date): string {
   const days = differenceInCalendarDays(end, today);
-  return `${days} ${pluralDays(days)} (${formatUntil(end)})`;
-}
-
-function escapeHtml(s: string) {
-  return s.replace(/[&<>"']/g, ch => {
-    switch (ch) {
-      case '&':
-        return '&amp;';
-      case '<':
-        return '&lt;';
-      case '>':
-        return '&gt;';
-      case '"':
-        return '&quot;';
-      case "'":
-        return '&#039;';
-      default:
-        return ch;
-    }
-  });
+  return `${days} ${pluralDaysRu(days)} (${formatUntil(end)})`;
 }
 
 function capitalizeRuMonth(s: string): string {
@@ -155,6 +120,10 @@ export function PeriodSelect(props: PeriodSelectProps): string {
     `;
   }).join('');
 
+  const weekdaysHtml = WEEKDAYS_RU.map(d => `<div class="${WEEKDAY_CELL_CLASS}">${d}</div>`).join(
+    ''
+  );
+
   return `
     <div class="relative">
       <input id="${id}" name="${id}" type="hidden" value="" />
@@ -211,13 +180,7 @@ export function PeriodSelect(props: PeriodSelectProps): string {
 
               <div class="flex w-full flex-col items-start p-2">
                 <div class="grid w-full grid-cols-7 gap-[2px]">
-                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">пн</div>
-                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">вт</div>
-                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">ср</div>
-                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">чт</div>
-                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">пт</div>
-                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">сб</div>
-                  <div class="flex h-[17px] items-start justify-center px-2 text-[12px] leading-[1.4] text-slate-500">вс</div>
+                  ${weekdaysHtml}
                 </div>
 
                 <div id="${id}__grid" class="mt-[2px] grid w-full grid-cols-7 gap-[2px]"></div>
@@ -315,10 +278,8 @@ export function initPeriodSelect(root: HTMLElement, props: PeriodSelectProps): v
     if (v) {
       modeList.classList.remove('hidden');
       modeCalendar.classList.add('hidden');
-      updateTextFromValue();
-    } else {
-      updateTextFromValue();
     }
+    updateTextFromValue();
   };
 
   const close = () => setExpanded(false);
@@ -418,6 +379,7 @@ export function initPeriodSelect(root: HTMLElement, props: PeriodSelectProps): v
     },
     { signal }
   );
+
   document.addEventListener(
     'keydown',
     e => {

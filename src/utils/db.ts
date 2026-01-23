@@ -8,7 +8,8 @@ export const DB_VERSION = 1;
 export const budgetStore = 'budget';
 export const transactionStore = 'transactions';
 
-type BudgetKey = 'current';
+export const CURRENT_BUDGET_KEY = 'current' as const;
+type BudgetKey = typeof CURRENT_BUDGET_KEY;
 
 interface BudgetDbSchema extends DBSchema {
   [budgetStore]: {
@@ -40,12 +41,12 @@ export const dbPromise = openDB<BudgetDbSchema>(DB_NAME, DB_VERSION, {
 
 export async function saveBudget(budget: Budget): Promise<void> {
   const db = await dbPromise;
-  await db.put(budgetStore, budget, 'current');
+  await db.put(budgetStore, budget, CURRENT_BUDGET_KEY);
 }
 
 export async function getBudget(): Promise<Budget | undefined> {
   const db = await dbPromise;
-  return db.get(budgetStore, 'current');
+  return db.get(budgetStore, CURRENT_BUDGET_KEY);
 }
 
 export async function addTransaction(tx: Omit<Transaction, 'id'>): Promise<number> {
@@ -58,10 +59,6 @@ export async function deleteTransaction(id: number): Promise<void> {
   await db.delete(transactionStore, id);
 }
 
-/**
- * Все транзакции по убыванию даты (YYYY-MM-DD), внутри дня — по убыванию id.
- * Используем индекс date, чтобы не сортировать огромный массив руками.
- */
 export async function getAllTransactions(): Promise<Transaction[]> {
   const db = await dbPromise;
   const tx = db.transaction(transactionStore, 'readonly');
@@ -74,13 +71,6 @@ export async function getAllTransactions(): Promise<Transaction[]> {
     result.push(cursor.value);
     cursor = await cursor.continue();
   }
-
-  result.sort((a, b) => {
-    if (a.date === b.date) {
-      return (b.id ?? 0) - (a.id ?? 0);
-    }
-    return a.date < b.date ? 1 : -1;
-  });
 
   await tx.done;
   return result;

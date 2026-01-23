@@ -1,76 +1,22 @@
-import { format, differenceInCalendarDays, parseISO, startOfDay } from 'date-fns';
-import { ru } from 'date-fns/locale';
-
 import {
-  averageRemainingPerDay,
+  plannedDailyBudget,
   remainingDays,
   todayLeft,
   totalBalance,
 } from '../services/budget-calculator';
 import { formatISODate } from '../utils/dates';
 import { addTransaction, getAllTransactions } from '../utils/db';
+import {
+  formatMoney,
+  pluralDaysRu,
+  formatRuDayMonth,
+  parseRubDigitsToNumber,
+  averageSpentPerDay,
+} from '../utils/format';
 import { appStore } from '../utils/state';
 import { attachMoneyInput, parseTransactionForm } from '../utils/validation';
 
-interface BudgetWithCreatedAt {
-  initialBalance: number;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
-}
-
-interface Tx {
-  type: 'expense' | 'income';
-  amount: number;
-  date: string;
-}
-
-function formatMoney(n: number): string {
-  return `${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(n)} ₽`;
-}
-
-function pluralDaysRu(n: number): string {
-  const pr = new Intl.PluralRules('ru-RU');
-  const form = pr.select(n);
-
-  if (form === 'one') {
-    return 'день';
-  }
-  if (form === 'few') {
-    return 'дня';
-  }
-  return 'дней';
-}
-
-function formatRuDayMonth(iso: string): string {
-  const d = parseISO(iso);
-  return format(d, 'd MMMM', { locale: ru });
-}
-
-function averageSpentPerDay(budget: { startDate: string }, txs: Tx[]): number {
-  const start = startOfDay(parseISO(budget.startDate));
-  const today = startOfDay(new Date());
-
-  const daysPassed = Math.max(1, differenceInCalendarDays(today, start) + 1);
-
-  const spent = txs
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-
-  if (spent === 0) {
-    return 0;
-  }
-
-  return spent / daysPassed;
-}
-
-function parseRubDigitsToNumber(raw: string): number {
-  const digits = raw.replace(/[^\d]/g, '');
-  if (!digits) {
-    return 0;
-  }
-  return Number(digits);
-}
+import type { BudgetWithCreatedAt, Tx } from '../types/common';
 
 export function renderMainPage(): HTMLElement {
   const state = appStore.getState();
@@ -84,7 +30,7 @@ export function renderMainPage(): HTMLElement {
   }
 
   const todayISO = formatISODate(new Date());
-  const txs = state.transactions as Tx[];
+  const txs = (state.transactions as Tx[]) ?? [];
 
   const safeBudget: BudgetWithCreatedAt = {
     ...budget,
@@ -92,7 +38,7 @@ export function renderMainPage(): HTMLElement {
   };
 
   const total = totalBalance(safeBudget, txs);
-  const daily = averageRemainingPerDay(safeBudget, txs, todayISO);
+  const planned = plannedDailyBudget(safeBudget);
   const leftToday = todayLeft(safeBudget, txs, todayISO);
   const daysLeft = remainingDays(safeBudget, todayISO);
 
@@ -113,20 +59,20 @@ export function renderMainPage(): HTMLElement {
   wrapper.innerHTML = `
     <div class="min-[704px]:hidden min-h-screen bg-white px-4 py-8">
       <div class="pb-32">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between gap-3">
           <div class="font-inter text-[16px] font-normal leading-[1.5] text-slate-500">
             Общий баланс
           </div>
-          <div class="font-inter text-[16px] font-normal leading-[1.5] text-blue-500">
-            ${formatMoney(daily)} в день
+          <div class="shrink-0 font-inter text-[16px] font-normal leading-[1.5] text-blue-500">
+            ${formatMoney(planned)} в день
           </div>
         </div>
 
-        <div class="mt-3 flex items-baseline gap-2">
-          <div class="font-inter text-[24px] font-semibold leading-[1.2] text-slate-900">
+        <div class="mt-3 flex items-baseline gap-2 min-w-0">
+          <div class="min-w-0 break-words font-inter text-[24px] font-semibold leading-[1.2] text-slate-900">
             ${formatMoney(total)}
           </div>
-          <div class="font-inter text-[16px] font-normal leading-[1.5] text-slate-500">
+          <div class="shrink-0 font-inter text-[16px] font-normal leading-[1.5] text-slate-500">
             на ${daysLeft} ${pluralDaysRu(daysLeft)}
           </div>
         </div>
@@ -154,13 +100,13 @@ export function renderMainPage(): HTMLElement {
             На сегодня доступно
           </div>
 
-          <div class="mt-2 flex items-baseline gap-1">
-            <div class="font-inter text-[32px] font-bold leading-[1.2] ${todayTone}">
+          <div class="mt-2 flex items-baseline gap-1 min-w-0">
+            <div class="min-w-0 break-words font-inter text-[32px] font-bold leading-[1.2] ${todayTone}">
               ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(leftToday)} ₽
             </div>
-            <div class="font-inter text-[32px] font-bold leading-[1.2] text-slate-500">/</div>
-            <div class="font-inter text-[32px] font-bold leading-[1.2] text-slate-500">
-              ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(daily)}
+            <div class="shrink-0 font-inter text-[32px] font-bold leading-[1.2] text-slate-500">/</div>
+            <div class="shrink-0 font-inter text-[32px] font-bold leading-[1.2] text-slate-500">
+              ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(planned)}
             </div>
           </div>
 
@@ -204,21 +150,21 @@ export function renderMainPage(): HTMLElement {
         <div class="w-full flex flex-col gap-2 min-[704px]:w-[524px] min-[1140px]:w-[558px]">
           <section class="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_2px_8px_rgba(0,0,0,0.10)]">
             <div class="flex flex-col gap-3">
-              <div class="flex items-center gap-2">
-                <div class="flex-1 text-[18px] font-[600] leading-[1.3] text-slate-500">
+              <div class="flex items-center gap-2 min-w-0">
+                <div class="flex-1 min-w-0 text-[18px] font-[600] leading-[1.3] text-slate-500">
                   Общий баланс
                 </div>
 
-                <div class="text-[16px] font-normal leading-[1.5] text-blue-500">
-                  ${formatMoney(daily)} в день
+                <div class="shrink-0 text-[16px] font-normal leading-[1.5] text-blue-500">
+                  ${formatMoney(planned)} в день
                 </div>
               </div>
 
-              <div class="flex items-baseline gap-2">
-                <div class="text-[32px] font-bold leading-[1.2] text-slate-900">
+              <div class="flex items-baseline gap-2 min-w-0">
+                <div class="min-w-0 break-words text-[32px] font-bold leading-[1.2] text-slate-900">
                   ${formatMoney(total)}
                 </div>
-                <div class="text-[16px] font-normal leading-[1.5] text-slate-500">
+                <div class="shrink-0 text-[16px] font-normal leading-[1.5] text-slate-500">
                   на ${daysLeft} ${pluralDaysRu(daysLeft)}
                 </div>
               </div>
@@ -240,13 +186,13 @@ export function renderMainPage(): HTMLElement {
                   На сегодня доступно
                 </div>
 
-                <div class="flex items-baseline gap-2">
-                  <div class="text-[32px] font-bold leading-[1.2] ${todayTone}">
+                <div class="flex items-baseline gap-2 min-w-0">
+                  <div class="min-w-0 break-words text-[32px] font-bold leading-[1.2] ${todayTone}">
                     ${formatMoney(leftToday)}
                   </div>
-                  <div class="text-[32px] font-bold leading-[1.2] text-slate-500">/</div>
-                  <div class="text-[32px] font-bold leading-[1.2] text-slate-500">
-                    ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(daily)}
+                  <div class="shrink-0 text-[32px] font-bold leading-[1.2] text-slate-500">/</div>
+                  <div class="shrink-0 text-[32px] font-bold leading-[1.2] text-slate-500">
+                    ${new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 2 }).format(planned)}
                   </div>
                 </div>
               </div>
@@ -305,14 +251,14 @@ export function renderMainPage(): HTMLElement {
                               : `<div class="my-1.5 h-px w-full bg-slate-500"></div>`;
 
                           return `
-                            <div class="flex items-baseline gap-3">
-                              <div class="flex-1 text-[18px] leading-[1.3] text-slate-900">
+                            <div class="flex items-baseline gap-3 min-w-0">
+                              <div class="flex-1 min-w-0 break-words text-[18px] leading-[1.3] text-slate-900">
                                <span class="font-semibold">
                                  ${new Intl.NumberFormat('ru-RU').format(t.amount)}
                                </span>
                                <span class="font-normal"> ₽</span>
                              </div>
-                              <div class="text-[16px] font-normal leading-[1.5] text-slate-500">
+                              <div class="shrink-0 text-[16px] font-normal leading-[1.5] text-slate-500">
                                 ${formatRuDayMonth(t.date)}
                               </div>
                             </div>
